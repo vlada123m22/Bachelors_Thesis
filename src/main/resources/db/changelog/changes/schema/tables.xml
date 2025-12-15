@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="vlada" runOnChange="true" id="users">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: users</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/users.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="user_roles">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: user_roles</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/user_roles.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="projects">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: projects</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/projects.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="teams">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: teams</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/teams.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="form_questions">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: form_questions</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/form_questions.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="applicants">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: applicants</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/applicants.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="question_answers">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: question_answers</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/question_answers.sql"/>
+    </changeSet>
+</databaseChangeLog>
