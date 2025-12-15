@@ -1,20 +1,21 @@
-FROM eclipse-temurin:21-jdk as build
-
+# Stage 1: Build with Maven + Java 21
+FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
 
-COPY mvnw .
-COPY .mvn .mvn
+# Copy only what is needed for build
 COPY pom.xml .
-COPY src src
+COPY src ./src
 
-RUN ./mvnw clean package -DskipTests
+# Build the app
+RUN mvn clean package -DskipTests
 
+# Stage 2: Runtime
 FROM eclipse-temurin:21-jre
-
 WORKDIR /app
 
+# Copy over the built JAR
 COPY --from=build /app/target/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8081
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
