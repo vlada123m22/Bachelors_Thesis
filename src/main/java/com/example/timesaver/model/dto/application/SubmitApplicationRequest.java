@@ -22,8 +22,7 @@ public class SubmitApplicationRequest {
     @Size(min = 2, max = 100, message = "Last name must be between 2 and 100 characters")
     private String lastName;
 
-    @NotBlank(message = "Team name is required")
-    @Size(min = 2, max = 100, message = "Team name must be between 2 and 100 characters")
+    @Size(min = 1, max = 100, message = "Team name must be at least 1 and at most 100 characters")
     private String teamName;
 
     @NotNull(message = "Join existent team flag is required")

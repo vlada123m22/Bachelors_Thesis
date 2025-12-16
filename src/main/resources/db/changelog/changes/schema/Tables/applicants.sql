@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.applicants
     registration_timestamp timestamp(6) with time zone NOT NULL,
     timezone character varying(255) COLLATE pg_catalog."default" NOT NULL,
     project_id bigint NOT NULL,
-    team_id bigint NOT NULL,
+    team_id bigint,
     user_id bigint,
     CONSTRAINT PK_Applicants PRIMARY KEY (applicant_id),
     CONSTRAINT FK_applicants_team_id FOREIGN KEY (team_id)

@@ -97,22 +97,54 @@ public class ApplicationService {
                 );
             }
 
-            // 4. Get or create team
-            Team team;
-            if (existingTeamOpt.isPresent()) {
-                team = existingTeamOpt.get();
-                team.setDateUpdated(ZonedDateTime.now(timezone));
-            } else {
-                team = new Team();
-                team.setTeamName(request.getTeamName());
-                team.setProject(project);
-                team.setDateCreated(ZonedDateTime.now(timezone));
-                team.setDateUpdated(ZonedDateTime.now(timezone));
-                team = teamRepository.save(team);
-            }
+        if (Objects.isNull(request.getTeamName()) && !Objects.isNull(request.getTeammates()) && !request.getTeammates().isEmpty()) {
+            throw new ApplicationException(
+                    "A team name must be provided if you are joining with a team!"
+            );
+        }
 
+        if (!Objects.isNull(request.getTeamName()) && (Objects.isNull(request.getTeammates()) || request.getTeammates().isEmpty())) {
+            throw new ApplicationException(
+                    "A team must consist of more than 1 member. You must either add a few teammates or leave the team name blank"
+            );
+        }
+
+        //save the applicant that is joining without a team
+        if (Objects.isNull(request.getTeamName())) {
+            Applicant applicant = new Applicant();
+            applicant.setFirstName(request.getFirstName());
+            applicant.setLastName(request.getLastName());
+            applicant.setHasApplied(true);
+            applicant.setRegistrationTimestamp(ZonedDateTime.now(timezone));
+            applicant.setIsSelected(false);
+            applicant.setTimezone(timezone.getId());
+            applicant.setProject(project);
+            applicant.setTeam(null);
+            applicantRepository.save(applicant);
+//            return new ApplicationResponse(
+//                    "Success",
+//                    "Application submitted successfully",
+//                    applicant.getApplicantId()
+//            );
+        }
+
+        // 4. Get or create team
+        Team team =null;
+        if (existingTeamOpt.isPresent()) {
+            team = existingTeamOpt.get();
+            team.setDateUpdated(ZonedDateTime.now(timezone));
+        } else if (!Objects.isNull(request.getTeamName())&&!request.getTeamName().isEmpty()&&!request.getTeamName().isBlank())
+        {
+            team = new Team();
+            team.setTeamName(request.getTeamName());
+            team.setProject(project);
+            team.setDateCreated(ZonedDateTime.now(timezone));
+            team.setDateUpdated(ZonedDateTime.now(timezone));
+            team = teamRepository.save(team);
+        }
+        
             // 5. Process teammates (add them if not exists, with hasApplied = false)
-            if (request.getTeammates() != null) {
+            if (request.getTeammates() != null && !request.getTeammates().isEmpty() && !Objects.isNull(team)) {
                 for (TeammateDTO teammateDTO : request.getTeammates()) {
                     Optional<Applicant> teammateOpt = applicantRepository
                             .findByNameAndProjectAndTeam(
