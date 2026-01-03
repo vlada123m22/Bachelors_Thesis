@@ -12,10 +12,6 @@ import java.util.Optional;
 // ==================== APPLICANT REPOSITORY ====================
 public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
 
-    Optional<Applicant> findByFirstNameAndLastNameAndProjectAndTeam(
-            String firstName, String lastName, Project project, Team team
-    );
-
     @Query("SELECT a FROM Applicant a WHERE " +
             "LOWER(a.firstName) = LOWER(:firstName) AND " +
             "LOWER(a.lastName) = LOWER(:lastName) AND " +
@@ -28,11 +24,6 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
             @Param("team") Team team
     );
 
-    List<Applicant> findByProject(Project project);
-
-    List<Applicant> findByTeam(Team team);
-
-    boolean existsByFirstNameAndLastNameAndProject(
-            String firstName, String lastName, Project project
-    );
+    @Query("SELECT a FROM Applicant a WHERE a.project.projectId = :projectId")
+    List<Applicant> getSingleApplicants (@Param("projectId") Long projectId);
 }
