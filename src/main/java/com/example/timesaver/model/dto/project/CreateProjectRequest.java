@@ -1,10 +1,8 @@
 package com.example.timesaver.model.dto.project;
 
-import jakarta.validation.Valid;
+
 import jakarta.validation.constraints.*;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 

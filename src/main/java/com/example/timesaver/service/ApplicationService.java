@@ -19,35 +19,36 @@ import java.util.stream.Collectors;
 @Service
 public class ApplicationService {
 
-    @Autowired
-    private ProjectRepository projectRepository;
+    private final ProjectRepository projectRepository;
+    private final TeamRepository teamRepository;
+    private final ApplicantRepository applicantRepository;
+    private final QuestionAnswerRepository questionAnswerRepository;
+    private final FileStorageService fileStorageService;
+    private final QuestionRepository questionRepository;
 
-    @Autowired
-    private TeamRepository teamRepository;
-
-    @Autowired
-    private ApplicantRepository applicantRepository;
-
-    @Autowired
-    private QuestionAnswerRepository questionAnswerRepository;
-
-    @Autowired
-    private FileStorageService fileStorageService;
+    public ApplicationService(ProjectRepository projectRepository, TeamRepository teamRepository, ApplicantRepository applicantRepository, QuestionAnswerRepository questionAnswerRepository, FileStorageService fileStorageService, QuestionRepository questionRepository) {
+        this.projectRepository = projectRepository;
+        this.teamRepository = teamRepository;
+        this.applicantRepository = applicantRepository;
+        this.questionAnswerRepository = questionAnswerRepository;
+        this.fileStorageService = fileStorageService;
+        this.questionRepository = questionRepository;
+    }
 
     /**
      * Get form questions for a project (public endpoint)
      */
     @Transactional(readOnly = true)
     public GetFormResponse getFormForProject(Long projectId) {
-        Optional<Project> projectOpt = projectRepository.findByIdWithQuestions(projectId);
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
 
         if (projectOpt.isEmpty()) {
             throw new RuntimeException("Project not found");
         }
 
-        Project project = projectOpt.get();
+        //Project project = projectOpt.get();
 
-        List<FormQuestionDTO> questionDTOs = project.getFormQuestions().stream()
+        List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectId(projectId).stream()
                 .sorted(Comparator.comparing(FormQuestion::getQuestionNumber))
                 .map(q -> {
                     FormQuestionDTO dto = new FormQuestionDTO();
@@ -73,7 +74,7 @@ public class ApplicationService {
 
         // 1. Find project
         Project project = projectRepository
-                .findByIdWithQuestions(request.getProjectId())
+                .findById(request.getProjectId())
                 .orElseThrow(() ->
                         new ApplicationException("Project not found")
                 );
@@ -201,7 +202,7 @@ public class ApplicationService {
             applicant = applicantRepository.save(applicant);
 
 
-            Map<Integer, FormQuestion> questionMap = project.getFormQuestions().stream()
+            Map<Integer, FormQuestion> questionMap = questionRepository.findByProjectId(project.getProjectId()).stream()
                     .collect(Collectors.toMap(FormQuestion::getQuestionNumber, q -> q));
 
             //do not need to answer all questions. Later will add a new field for questions: isRequired

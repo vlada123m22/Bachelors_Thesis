@@ -1,6 +1,7 @@
 package com.example.timesaver.repository;
 
 import com.example.timesaver.model.*;
+import com.example.timesaver.model.dto.application.TeammateDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,12 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 
-// ==================== APPLICANT REPOSITORY ====================
 public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
-
-    Optional<Applicant> findByFirstNameAndLastNameAndProjectAndTeam(
-            String firstName, String lastName, Project project, Team team
-    );
 
     @Query("SELECT a FROM Applicant a WHERE " +
             "LOWER(a.firstName) = LOWER(:firstName) AND " +
@@ -28,11 +24,29 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
             @Param("team") Team team
     );
 
-    List<Applicant> findByProject(Project project);
+    @Query("SELECT a FROM Applicant a WHERE a.project.projectId = :projectId AND a.team IS NULL")
+    List<Applicant> getSingleApplicants (@Param("projectId") Long projectId);
 
-    List<Applicant> findByTeam(Team team);
+    @Query("SELECT new com.example.timesaver.model.dto.application.TeammateDTO( a.firstName, a.lastName) " +
+            "FROM Applicant a " +
+            "WHERE a.project.projectId = :projectId " +
+            "AND a.team IS NULL")
+    List<TeammateDTO> getSingleApplicantsFirstAndLastName (@Param("projectId") Long projectId);
 
-    boolean existsByFirstNameAndLastNameAndProject(
-            String firstName, String lastName, Project project
-    );
+    @Query("SELECT a FROM Applicant a " +
+            "WHERE a.project.projectId = :projectId " +
+            "AND a.team IS NOT NULL")
+    List<Applicant> getApplicantsWithTeam(@Param("projectId") Long projectId);
+
+    @Query("SELECT a FROM Applicant a " +
+            "WHERE a.project.projectId = :projectId " +
+            "AND a.team IS NULL")
+    List<Applicant> getApplicantsWithNoTeam(@Param("projectId") Long projectId);
+
+    @Query("SELECT new com.example.timesaver.model.dto.application.TeammateDTO( a.firstName, a.lastName) " +
+            "FROM Applicant a " +
+            "WHERE a.project.projectId = :projectId " +
+            "AND a.team.teamId = :teamId")
+    List<TeammateDTO> getFirstAndLastNameByTeam(@Param("projectId") Long projectId, @Param("teamId") Long teamId);
+
 }
