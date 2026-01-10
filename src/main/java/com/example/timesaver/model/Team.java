@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "teams", uniqueConstraints = {
@@ -31,8 +29,6 @@ public class Team {
     @Column(nullable = false)
     private ZonedDateTime dateUpdated;
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
-    private List<Applicant> applicants = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

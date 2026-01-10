@@ -40,10 +40,6 @@ public class Project {
     @JoinColumn(name = "organizer_id", nullable = false)
     private User organizer;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("questionNumber ASC")
-    private List<FormQuestion> formQuestions = new ArrayList<>();
-
     @Column(nullable = false, updatable = false, name = "created_at")
     private LocalDateTime createdAt;
 
@@ -61,17 +57,5 @@ public class Project {
         updatedAt = LocalDateTime.now();
     }
 
-    // Helper method to add questions
-    public void addFormQuestion(FormQuestion question) {
-        formQuestions.add(question);
-        question.setProject(this);
-    }
 
-    // Helper method to clear and set questions
-    public void setFormQuestionsWithBidirectional(List<FormQuestion> questions) {
-        this.formQuestions.clear();
-        if (questions != null) {
-            questions.forEach(this::addFormQuestion);
-        }
-    }
 }

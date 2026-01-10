@@ -25,7 +25,7 @@ services:
 
   # Spring Boot Backend
   backend:
-    image: vladamusin/backend:0.0.1
+    image: vladamusin/backend:0.0.2
     container_name: platform_backend
     restart: always
     depends_on:
@@ -38,7 +38,7 @@ services:
       SERVER_ADDRESS: 0.0.0.0
       SERVER_PORT: 8081
       SERVER_FORWARD_HEADERS_STRATEGY: framework
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: 0MhF1xqqaE0VHLUkaEBgUgZtnQWeaNBIAhAgkwvQbFM=
     # Only expose to internal network, NOT to host
     expose:
       - "8081"

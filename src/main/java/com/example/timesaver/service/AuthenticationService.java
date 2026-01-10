@@ -19,14 +19,17 @@ import java.util.Set;
 @Service
 public class AuthenticationService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private BCryptPasswordEncoder encoder;
+    private final BCryptPasswordEncoder encoder;
 
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
+
+    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder encoder, JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.encoder = encoder;
+        this.jwtService = jwtService;
+    }
 
     public SignUpResponse registerOrganizer(SignUpRequest request) {
         if (userRepository.findByUserName(request.getUserName()).isPresent()) {

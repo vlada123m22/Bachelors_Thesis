@@ -5,6 +5,7 @@ import com.example.timesaver.model.Project;
 import com.example.timesaver.model.User;
 import com.example.timesaver.model.dto.project.*;
 import com.example.timesaver.repository.ProjectRepository;
+import com.example.timesaver.repository.QuestionRepository;
 import com.example.timesaver.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class ProjectService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
 
     @Transactional
     public ProjectResponse createProject(CreateProjectRequest request) {
@@ -59,12 +63,12 @@ public class ProjectService {
             project.setEndDate(request.getEndDate());
             project.setOrganizer(organizer);
 
-            // Add form questions
-            List<FormQuestion> questions = convertToFormQuestions(request.getFormQuestions(), project);
-            project.setFormQuestionsWithBidirectional(questions);
-
-            // Save project
             Project savedProject = projectRepository.save(project);
+
+            // Add form questions
+            saveQuestions(request.getFormQuestions(), project);
+
+
 
             return new ProjectResponse("Success", null, savedProject.getProjectId());
 
@@ -73,14 +77,10 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public GetProjectResponse getProject(Long projectId, String userTimezone) {
         try {
-            // Get current authenticated user - also delete - need this method to be public
-//            User currentUser = getCurrentUser();
-//            if (currentUser == null) {
-//                throw new RuntimeException("User not authenticated");
-//            }
+
             ZoneId zone = ZoneId.of(userTimezone);
             // Find project with questions
-            Optional<Project> projectOpt = projectRepository.findByIdWithQuestions(projectId);
+            Optional<Project> projectOpt = projectRepository.findById(projectId);
             if (projectOpt.isEmpty()) {
                 throw new RuntimeException("Project not found");
             }
@@ -93,7 +93,7 @@ public class ProjectService {
 //            }
 
             // Convert to DTO
-            List<FormQuestionDTO> questionDTOs = project.getFormQuestions().stream()
+            List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectId(projectId).stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
 
@@ -124,7 +124,7 @@ public class ProjectService {
             }
 
             // Find existing project
-            Optional<Project> projectOpt = projectRepository.findByIdWithQuestions(request.getProjectId());
+            Optional<Project> projectOpt = projectRepository.findById(request.getProjectId());
             if (projectOpt.isEmpty()) {
                 return new ProjectResponse("Failure", "Project not found");
             }
@@ -156,14 +156,9 @@ public class ProjectService {
             project.setStartDate(request.getStartDate());
             project.setEndDate(request.getEndDate());
 
-            // Clear existing questions and add new ones
-            List<FormQuestion> questions = project.getFormQuestions();
-            questions.clear();
-            questions = convertToFormQuestions(request.getFormQuestions(), project);
-            project.setFormQuestionsWithBidirectional(questions);
-
-            // Save updated project
             projectRepository.save(project);
+            questionRepository.deleteQuestions(project.getProjectId());
+            saveQuestions(request.getFormQuestions(), project);
 
             return new ProjectResponse("Success", null, project.getProjectId());
 
@@ -211,7 +206,7 @@ public class ProjectService {
             // Convert to DTOs
             return projects.stream()
                     .map(project -> {
-                        List<FormQuestionDTO> questionDTOs = project.getFormQuestions().stream()
+                        List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectId(project.getProjectId()).stream()
                                 .map(this::convertToDTO)
                                 .collect(Collectors.toList());
 
@@ -275,8 +270,7 @@ public class ProjectService {
         return true;
     }
 
-    private List<FormQuestion> convertToFormQuestions(List<FormQuestionDTO> dtos, Project project) {
-        List<FormQuestion> questions = new ArrayList<>();
+    private void saveQuestions(List<FormQuestionDTO> dtos, Project project) {
         for (FormQuestionDTO dto : dtos) {
             FormQuestion question = new FormQuestion();
             question.setQuestionNumber(dto.getQuestionNumber());
@@ -284,9 +278,9 @@ public class ProjectService {
             question.setQuestion(dto.getQuestion());
             question.setCheckboxOptions(dto.getCheckboxOptions());
             question.setProject(project);
-            questions.add(question);
+            questionRepository.save(question);
+
         }
-        return questions;
     }
 
     private FormQuestionDTO convertToDTO(FormQuestion question) {
