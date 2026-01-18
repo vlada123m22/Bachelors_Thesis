@@ -9,6 +9,8 @@ import com.example.timesaver.repository.QuestionRepository;
 import com.example.timesaver.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -115,37 +117,46 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectResponse editProject(EditProjectRequest request) {
-        try {
+    public ResponseEntity<ProjectResponse> editProject(EditProjectRequest request) {
+        ProjectResponse responseBody;
+
+
             // Get current authenticated user
             User organizer = getCurrentUser();
             if (organizer == null) {
-                return new ProjectResponse("Failure", "User not authenticated");
+                responseBody = new ProjectResponse("Failure", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
             }
 
             // Find existing project
             Optional<Project> projectOpt = projectRepository.findById(request.getProjectId());
             if (projectOpt.isEmpty()) {
-                return new ProjectResponse("Failure", "Project not found");
+                responseBody = new ProjectResponse("Failure", "Project not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
             }
 
             Project project = projectOpt.get();
 
             // Check if user is the organizer
             if (!project.getOrganizer().getId().equals(organizer.getId())) {
-                return new ProjectResponse("Failure", "You don't have permission to edit this project");
+                responseBody = new ProjectResponse("Failure", "You don't have permission to edit this project");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseBody);
             }
 
             // Validate participant numbers
             if (request.getMinNrParticipants() != null && request.getMaxNrParticipants() != null) {
                 if (request.getMinNrParticipants() > request.getMaxNrParticipants()) {
-                    return new ProjectResponse("Failure", "Minimum participants cannot exceed maximum participants");
+
+                    responseBody = new ProjectResponse("Failure", "Minimum participants cannot exceed maximum participants");
+                    return ResponseEntity.badRequest().body(responseBody);
                 }
             }
 
             // Validate question numbers
             if (!validateQuestionNumbers(request.getFormQuestions())) {
-                return new ProjectResponse("Failure", "Question numbers must be unique and start from 1");
+
+                responseBody = new ProjectResponse("Failure", "Question numbers must be unique and start from 1");
+                return ResponseEntity.badRequest().body(responseBody);
             }
 
             // Update project details
@@ -160,11 +171,8 @@ public class ProjectService {
             questionRepository.deleteQuestions(project.getProjectId());
             saveQuestions(request.getFormQuestions(), project);
 
-            return new ProjectResponse("Success", null, project.getProjectId());
-
-        } catch (Exception e) {
-            return new ProjectResponse("Failure", "An error occurred while updating the project: " + e.getMessage());
-        }
+            responseBody = new ProjectResponse("Success", null, project.getProjectId());
+            return ResponseEntity.ok().body(responseBody);
     }
 
     @Transactional

@@ -93,9 +93,7 @@ public class ApplicationService {
 
             // CHECK 1: Team exists check
             if (existingTeamOpt.isPresent() && !request.getJoinExistentTeam()) {
-                throw new ApplicationException(
-                        "TEAM_EXISTS:" + request.getTeamName()
-                );
+                return  new ApplicationResponse("Failure", "Team "+request.getTeamName() + " already exists", Boolean.TRUE);
             }
 
         if (Objects.isNull(request.getTeamName()) && !Objects.isNull(request.getTeammates()) && !request.getTeammates().isEmpty()) {
@@ -289,8 +287,7 @@ public class ApplicationService {
 
             return new ApplicationResponse(
                     "Success",
-                    "Application submitted successfully",
-                    applicant.getApplicantId()
+                    "Application submitted successfully"
             );
     }
 }

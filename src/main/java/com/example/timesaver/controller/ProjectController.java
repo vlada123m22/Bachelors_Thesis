@@ -60,13 +60,7 @@ public class ProjectController {
     @PutMapping
     @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<ProjectResponse> editProject(@Valid @RequestBody EditProjectRequest request) {
-        ProjectResponse response = projectService.editProject(request);
-
-        if ("Success".equals(response.getStatus())) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+            return projectService.editProject(request);
     }
 
     /**
