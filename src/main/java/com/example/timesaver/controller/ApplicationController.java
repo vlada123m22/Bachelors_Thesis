@@ -100,7 +100,7 @@ public class ApplicationController {
             // Return appropriate status code
             if ("Success".equals(response.getStatus())) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            } else if ("TeamExists".equals(response.getStatus())) {
+            } else if (response.getTeamExists() == Boolean.TRUE) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

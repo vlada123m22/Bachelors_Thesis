@@ -7,6 +7,7 @@ import com.example.timesaver.model.dto.auth.SignUpResponse;
 import com.example.timesaver.service.AuthenticationService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,24 @@ public class AuthenticationController {
     private AuthenticationService authService;
 
     @PostMapping("/signup/organizer")
-    public SignUpResponse signUpOrganizer(@RequestBody SignUpRequest request) {
-        return authService.registerOrganizer(request);
+    public ResponseEntity<SignUpResponse> signUpOrganizer(@RequestBody SignUpRequest request) {
+        SignUpResponse response = authService.registerOrganizer(request);
+        if (response.getErrorMessage() == "The username already exists. Please choose another username")
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        try {
+            return  ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
     }
 
     @PostMapping("/signup")
-    public SignUpResponse signUp(@RequestBody SignUpRequest request) {
-        return authService.registerOrganizer(request);
+    public ResponseEntity<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
+        SignUpResponse response = authService.registerOrganizer(request);
+        if (response.getErrorMessage() == "The username already exists. Please choose another username")
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return  ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/signup/participant")
@@ -39,7 +51,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+
         return authService.login(request);
     }
 

@@ -9,6 +9,8 @@ import com.example.timesaver.model.dto.auth.SignUpResponse;
 import com.example.timesaver.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -82,22 +84,25 @@ public class AuthenticationService {
         return new SignUpResponse(true, null);
     }
 
-    public LoginResponse login(LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByUserName(request.getUserName());
-
+        LoginResponse body;
         if (userOpt.isEmpty()) {
-            return new LoginResponse("Failure", "User not found", null);
+            body =  new LoginResponse("Failure", "User not found", null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
         }
 
         User user = userOpt.get();
 
         if (!encoder.matches(request.getPassword(), user.getPassword())) {
-            return new LoginResponse("Failure", "Incorrect password", null);
+            body = new LoginResponse("Failure", "Incorrect password", null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
         }
 
         // Generate JWT token
         String token = jwtService.generateToken(user.getUserName(), user.getRoles());
 
-        return new LoginResponse("Success", null, token);
+        body = new LoginResponse("Success", null, token);
+        return ResponseEntity.status(HttpStatus.OK).body(body);
     }
 }
