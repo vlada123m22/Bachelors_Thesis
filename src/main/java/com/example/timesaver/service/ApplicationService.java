@@ -120,11 +120,10 @@ public class ApplicationService {
             applicant.setProject(project);
             applicant.setTeam(null);
             applicantRepository.save(applicant);
-//            return new ApplicationResponse(
-//                    "Success",
-//                    "Application submitted successfully",
-//                    applicant.getApplicantId()
-//            );
+            return new ApplicationResponse(
+                    "Success",
+                    "Application submitted successfully"
+            );
         }
 
         // 4. Get or create team
