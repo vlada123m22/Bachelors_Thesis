@@ -12,3 +12,15 @@ CREATE TABLE IF NOT EXISTS public.teams
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
+
+ALTER TABLE public.teams
+  ADD COLUMN IF NOT EXISTS lead_applicant_id BIGINT,
+  ADD COLUMN IF NOT EXISTS idea_title VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS idea_description TEXT;
+
+ALTER TABLE public.teams
+  ADD CONSTRAINT fk_teams_lead_applicant
+    FOREIGN KEY (lead_applicant_id)
+    REFERENCES public.applicants (applicant_id)
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;

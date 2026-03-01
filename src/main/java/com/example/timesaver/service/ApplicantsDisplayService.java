@@ -1,9 +1,8 @@
 package com.example.timesaver.service;
 
 import com.example.timesaver.model.Applicant;
-import com.example.timesaver.model.QuestionAnswer;
 import com.example.timesaver.model.Team;
-import com.example.timesaver.model.dto.applicantsdisplay.*;
+import com.example.timesaver.model.dto.applicants.display.*;
 import com.example.timesaver.model.dto.application.TeammateDTO;
 import com.example.timesaver.repository.ApplicantRepository;
 import com.example.timesaver.repository.QuestionAnswerRepository;
@@ -59,13 +58,13 @@ public class ApplicantsDisplayService {
 
         for (Applicant applicant : participantsWithTeam){
             List<QuestionAnswerDTO> questionAnswers = questionAnswerRepository.findQuestionNumberAndAnswerByApplicantId(applicant.getApplicantId());
-            ParticipantWithTeamDTO participantDTO = new ParticipantWithTeamDTO(applicant.getFirstName(),applicant.getLastName(), applicant.getTeam().getTeamName(), questionAnswers);
+            ParticipantWithTeamDTO participantDTO = new ParticipantWithTeamDTO(applicant.getFirstName(),applicant.getLastName(), applicant.getTeam().getTeamName(), applicant.getIsSelected(), questionAnswers);
             participantsWithTeamDTOs.add(participantDTO);
         }
 
         for(Applicant applicant : participantsWithNoTeam){
             List<QuestionAnswerDTO> questionAnswers = questionAnswerRepository.findQuestionNumberAndAnswerByApplicantId(applicant.getApplicantId());
-            ParticipantWithNoTeamDTO participantDTO = new ParticipantWithNoTeamDTO(applicant.getFirstName(),applicant.getLastName(), questionAnswers);
+            ParticipantWithNoTeamDTO participantDTO = new ParticipantWithNoTeamDTO(applicant.getFirstName(),applicant.getLastName(), applicant.getIsSelected(),questionAnswers);
             participantsWithNoTeamDTOs.add(participantDTO);
         }
 

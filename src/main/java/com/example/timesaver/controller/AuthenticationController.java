@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
@@ -22,7 +24,7 @@ public class AuthenticationController {
     @PostMapping("/signup/organizer")
     public ResponseEntity<SignUpResponse> signUpOrganizer(@RequestBody SignUpRequest request) {
         SignUpResponse response = authService.registerOrganizer(request);
-        if (response.getErrorMessage() == "The username already exists. Please choose another username")
+        if (Objects.equals(response.getErrorMessage(), "The username already exists. Please choose another username") || Objects.equals(response.getErrorMessage(), "The email already exists. Please choose another email"))
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         try {
             return  ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -35,14 +37,18 @@ public class AuthenticationController {
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
         SignUpResponse response = authService.registerOrganizer(request);
-        if (response.getErrorMessage() == "The username already exists. Please choose another username")
+        if (Objects.equals(response.getErrorMessage(), "The username already exists. Please choose another username") || Objects.equals(response.getErrorMessage(), "The email already exists. Please choose another email"))
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         return  ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/signup/participant")
-    public SignUpResponse signUpParticipant(@RequestBody SignUpRequest request) {
-        return authService.registerParticipant(request);
+    public ResponseEntity<SignUpResponse> signUpParticipant(@RequestBody SignUpRequest request) {
+        SignUpResponse response = authService.registerParticipant(request);
+        if ("The username already exists. Please choose another username".equals(response.getErrorMessage())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/signup/admin")

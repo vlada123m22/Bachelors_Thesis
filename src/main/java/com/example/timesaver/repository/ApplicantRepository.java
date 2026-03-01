@@ -49,4 +49,5 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
             "AND a.team.teamId = :teamId")
     List<TeammateDTO> getFirstAndLastNameByTeam(@Param("projectId") Long projectId, @Param("teamId") Long teamId);
 
+    Optional<Applicant> findByUserAndProject(User user, Project project);
 }

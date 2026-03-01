@@ -18,5 +18,13 @@ CREATE TABLE IF NOT EXISTS public.applicants
     CONSTRAINT FK_Applicants_project_id FOREIGN KEY (project_id)
         REFERENCES public.projects (project_id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT FK_applicants_user_id FOREIGN KEY (team_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+                                        ON UPDATE NO ACTION
+                                        ON DELETE NO ACTION,
 )
+
+ALTER TABLE applicants
+  ADD COLUMN IF NOT EXISTS roles VARCHAR(1000),
+  ADD COLUMN IF NOT EXISTS background VARCHAR(1000);

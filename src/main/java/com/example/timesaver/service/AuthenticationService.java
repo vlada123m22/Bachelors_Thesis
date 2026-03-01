@@ -39,14 +39,19 @@ public class AuthenticationService {
                     "The username already exists. Please choose another username");
         }
 
+        if(userRepository.findUserByEmail(request.getEmail()).isEmpty())
+            return new SignUpResponse(false,
+                    "The email already exists. Please choose another email");
+
         User user = new User();
         user.setUserName(request.getUserName());
         user.setPassword(encoder.encode(request.getPassword()));
         user.setCreationDateTime(LocalDateTime.now());
         user.setRoles(Set.of(Role.ORGANIZER));
+        user.setEmail(request.getEmail());
+
 
         userRepository.save(user);
-
         return new SignUpResponse(true, null);
     }
 
@@ -56,6 +61,9 @@ public class AuthenticationService {
                     "The username already exists. Please choose another username");
         }
 
+        if(userRepository.findUserByEmail(request.getEmail()).isEmpty())
+            return new SignUpResponse(false,
+                    "The email already exists. Please choose another email");
         User user = new User();
         user.setUserName(request.getUserName());
         user.setPassword(encoder.encode(request.getPassword()));

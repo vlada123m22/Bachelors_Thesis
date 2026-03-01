@@ -29,6 +29,15 @@ public class Team {
     @Column(nullable = false)
     private ZonedDateTime dateUpdated;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lead_applicant_id")
+    private Applicant lead;
+
+    @Column(name = "idea_title")
+    private String ideaTitle;
+
+    @Column(name = "idea_description")
+    private String ideaDescription;
 
     @PrePersist
     protected void onCreate() {

@@ -41,6 +41,18 @@ public class Applicant {
     @Column(nullable = false)
     private String timezone;
 
+    @Column(name = "roles", length = 1000)
+    private String roles; // Pipe-separated applicant selections
+
+    @Column(name = "background", length = 1000)
+    private String background; // Pipe-separated applicant selections
+
+
+    // Inside the Applicant class, add the user field:
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @PrePersist
     protected void onCreate() {
         if (registrationTimestamp == null) {
