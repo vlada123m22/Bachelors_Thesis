@@ -75,4 +75,12 @@
         <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/team_member_backgrounds.sql"/>
     </changeSet>
 
+    <changeSet author="vlada" id="assignments">
+        <comment>(DDL) add Table: assignments</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/assignments.sql"/>
+    </changeSet>
+    <changeSet author="vlada" id="submissions">
+        <comment>(DDL) add Table: submissions</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/submissions.sql"/>
+    </changeSet>
 </databaseChangeLog>

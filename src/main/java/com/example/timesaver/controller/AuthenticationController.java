@@ -86,4 +86,14 @@ public class AuthenticationController {
     public ResponseEntity<String> participantTest() {
         return ResponseEntity.ok("Participant access granted");
     }
+
+    @PostMapping("/signup/mentor")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
+    public ResponseEntity<SignUpResponse> signUpMentor(@RequestBody SignUpRequest request) {
+        SignUpResponse response = authService.registerMentor(request);
+        if (!response.isCreated()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 }
