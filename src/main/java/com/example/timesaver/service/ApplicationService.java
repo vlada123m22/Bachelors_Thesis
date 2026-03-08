@@ -7,6 +7,8 @@ import com.example.timesaver.model.dto.project.FormQuestionDTO;
 import com.example.timesaver.repository.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +27,8 @@ public class ApplicationService {
     private final QuestionAnswerRepository questionAnswerRepository;
     private final FileStorageService fileStorageService;
     private final QuestionRepository questionRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public ApplicationService(ProjectRepository projectRepository, TeamRepository teamRepository, ApplicantRepository applicantRepository, QuestionAnswerRepository questionAnswerRepository, FileStorageService fileStorageService, QuestionRepository questionRepository) {
         this.projectRepository = projectRepository;
@@ -33,6 +37,16 @@ public class ApplicationService {
         this.questionAnswerRepository = questionAnswerRepository;
         this.fileStorageService = fileStorageService;
         this.questionRepository = questionRepository;
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() ||
+                "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        String username = authentication.getName();
+        return userRepository.findByUserName(username).orElse(null);
     }
 
     /**
@@ -79,6 +93,14 @@ public class ApplicationService {
                         new ApplicationException("Project not found")
                 );
 
+        User currentUser = getCurrentUser();
+        // If teamsPreformed is false, an account is required
+        if (Boolean.FALSE.equals(project.getTeamsPreformed())) {
+            if (currentUser == null) {
+                throw new ApplicationException("An account is required to apply. Please log in or sign up.");
+            }
+        }
+
             // 2. Validate timezone
             ZoneId timezone;
             try {
@@ -87,7 +109,14 @@ public class ApplicationService {
                 throw new ApplicationException("Invalid timezone: " + request.getTimezone());
             }
 
-            // 3. Check if team exists (case-insensitive)
+        List<String> allowedRoles = PipeList.split(project.getRolesOptions());
+        List<String> allowedBkg = PipeList.split(project.getBackgroundOptions());
+
+        validateSubset(request.getRoles(), allowedRoles, "roles");
+        validateSubset(request.getBackground(), allowedBkg, "background");
+
+
+        // 3. Check if team exists (case-insensitive)
             Optional<Team> existingTeamOpt = teamRepository
                     .findByTeamNameIgnoreCaseAndProject(request.getTeamName(), project);
 
@@ -119,6 +148,9 @@ public class ApplicationService {
             applicant.setTimezone(timezone.getId());
             applicant.setProject(project);
             applicant.setTeam(null);
+            applicant.setUser(getCurrentUser());
+            applicant.setRoles(PipeList.join(request.getRoles()));
+            applicant.setBackground(PipeList.join(request.getBackground()));
             applicantRepository.save(applicant);
             return new ApplicationResponse(
                     "Success",
@@ -288,5 +320,14 @@ public class ApplicationService {
                     "Success",
                     "Application submitted successfully"
             );
+    }
+    private void validateSubset(List<String> subset, List<String> allowed, String fieldName) {
+        for (String s : subset) {
+            if (!allowed.contains(s)) {
+                throw new ApplicationException(
+                        "Invalid " + fieldName + ": " + s
+                );
+            }
+        }
     }
 }

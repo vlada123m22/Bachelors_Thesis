@@ -1,5 +1,6 @@
 package com.example.timesaver.model.dto.project;
 
+import com.example.timesaver.model.ScheduleVisibility;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -32,4 +33,18 @@ public class EditProjectRequest {
     @NotNull(message = "Form questions cannot be null")
     @Size(min = 1, message = "At least one form question is required")
     private List<FormQuestionDTO> formQuestions;
+
+    private List<ScheduleDTO> schedules;
+
+    private Boolean teamsPreformed;
+    private ScheduleVisibility scheduleVisibility;
+
+    private List<String> roleOptions;       // e.g., ["Developer", "Designer"]
+    private List<String> backgroundOptions; // e.g., ["Computer Science", "Marketing"]
+
+    // Optional custom wording (organizer-defined). If null/blank, use defaults.
+    private String rolesQuestionText;       // default: "What are your preferred roles in the team?"
+    private String backgroundQuestionText;  // default: "What is your background?"
+
+
 }

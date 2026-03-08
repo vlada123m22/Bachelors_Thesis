@@ -1,4 +1,4 @@
-package com.example.timesaver.model.dto.applicantsdisplay;
+package com.example.timesaver.model.dto.applicants.display;
 
 import com.example.timesaver.model.dto.application.TeammateDTO;
 import lombok.AllArgsConstructor;
@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class TeamDTO {
-    private String teamName;
-    private List<TeammateDTO> teamMembers;
+@AllArgsConstructor
+public class GetTeamsDTO {
+    private List<TeamDTO> teams;
+    private List<TeammateDTO> singleParticipants;
 }

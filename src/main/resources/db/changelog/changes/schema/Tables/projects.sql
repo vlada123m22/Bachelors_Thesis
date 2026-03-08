@@ -10,9 +10,19 @@ CREATE TABLE IF NOT EXISTS public.projects
     end_date timestamp(6) without time zone,
     project_description character varying(5000) COLLATE pg_catalog."default",
     start_date timestamp(6) without time zone,
+    teams_preformed boolean default(false);
     CONSTRAINT pk_projects PRIMARY KEY (project_id),
     CONSTRAINT fk_projects_organizer_id FOREIGN KEY (organizer_id)
         REFERENCES public.users (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
+
+ALTER TABLE public.projects
+    ADD COLUMN schedule_visibility character varying(50) DEFAULT 'EVERYBODY';
+
+ALTER TABLE projects
+  ADD COLUMN IF NOT EXISTS roles_options VARCHAR(1000),
+  ADD COLUMN IF NOT EXISTS background_options VARCHAR(1000),
+  ADD COLUMN IF NOT EXISTS roles_question_text VARCHAR(500) DEFAULT 'What are your preferred roles in the team?',
+  ADD COLUMN IF NOT EXISTS background_question_text VARCHAR(500) DEFAULT 'What is your background?';

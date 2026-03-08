@@ -13,6 +13,9 @@ public class SubmitApplicationRequest {
 
     @NotNull(message = "Project ID is required")
     private Long projectId;
+    private List<String> roles;      // selections from organizer options
+    private List<String> background; // selections from organizer options
+
 
     @NotBlank(message = "First name is required")
     @Size(min = 2, max = 100, message = "First name must be between 2 and 100 characters")
@@ -37,4 +40,5 @@ public class SubmitApplicationRequest {
     // Timezone of the applicant (ISO format, e.g., "America/New_York")
     @NotBlank(message = "Timezone is required")
     private String timezone;
+
 }

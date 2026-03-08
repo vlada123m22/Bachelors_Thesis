@@ -1,5 +1,7 @@
 package com.example.timesaver.controller;
 
+import com.example.timesaver.model.Project;
+import com.example.timesaver.model.User;
 import com.example.timesaver.model.dto.project.*;
 import com.example.timesaver.service.ProjectService;
 
@@ -95,5 +97,18 @@ public class ProjectController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ProjectResponse("Failure", e.getMessage()));
         }
+    }
+
+    @GetMapping("/{projectId}/schedule/{dayNumber}")
+    public ResponseEntity<?> getScheduleForDay(@PathVariable Long projectId, @PathVariable Integer dayNumber) {
+        Project project = projectService.getProjectById(projectId);
+        User user = projectService.getCurrentUser();
+
+        if (!projectService.canUserViewSchedule(project, user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied to schedule");
+        }
+
+        List<ScheduleDTO> schedule = projectService.getScheduleByDay(projectId, dayNumber);
+        return ResponseEntity.ok(schedule);
     }
 }

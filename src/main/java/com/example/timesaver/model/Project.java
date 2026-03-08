@@ -2,6 +2,7 @@ package com.example.timesaver.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -45,6 +46,27 @@ public class Project {
 
     @Column(nullable = false, name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(nullable = false, name = "teams_preformed")
+    @ColumnDefault("true")
+    private Boolean teamsPreformed;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "schedule_visibility")
+    private ScheduleVisibility scheduleVisibility = ScheduleVisibility.EVERYBODY;
+
+    @Column(name = "roles_options", length = 1000)
+    private String rolesOptions; // Pipe-separated organizer options
+
+    @Column(name = "background_options", length = 1000)
+    private String backgroundOptions; // Pipe-separated organizer options
+
+    @Column(name = "roles_question_text", length = 500)
+    private String rolesQuestionText = "What are your preferred roles in the team?";
+
+    @Column(name = "background_question_text", length = 500)
+    private String backgroundQuestionText = "What is your background?";
+
 
     @PrePersist
     protected void onCreate() {

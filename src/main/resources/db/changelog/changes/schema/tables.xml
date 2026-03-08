@@ -39,4 +39,48 @@
         <comment>(DDL) add Table: question_answers</comment>
         <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/question_answers.sql"/>
     </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="project_schedules">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: project_schedules</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/project_schedules.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="team_role_requirements">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: team_role_requirements</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/team_role_requirements.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="team_background_requirements">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: team_background_requirements</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/team_background_requirements.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="team_applications">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: team_applications</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/team_applications.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="team_members">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: team_members</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/team_members.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="team_member_roles">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: team_member_roles</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/team_member_roles.sql"/>
+    </changeSet>
+    <changeSet author="vlada" runOnChange="true" id="team_member_backgrounds">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Table: team_member_backgrounds</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/team_member_backgrounds.sql"/>
+    </changeSet>
+
+    <changeSet author="vlada" id="assignments">
+        <comment>(DDL) add Table: assignments</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/assignments.sql"/>
+    </changeSet>
+    <changeSet author="vlada" id="submissions">
+        <comment>(DDL) add Table: submissions</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/submissions.sql"/>
+    </changeSet>
 </databaseChangeLog>
