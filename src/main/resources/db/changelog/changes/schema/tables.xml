@@ -32,7 +32,7 @@
     <changeSet author="vlada" runOnChange="true" id="applicants">
         <validCheckSum>ANY</validCheckSum>
         <comment>(DDL) add Table: applicants</comment>
-        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="true" path="Tables/applicants.sql"/>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="false" path="Tables/applicants.sql"/>
     </changeSet>
     <changeSet author="vlada" runOnChange="true" id="question_answers">
         <validCheckSum>ANY</validCheckSum>

@@ -51,6 +51,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle no such element exceptions (404 Not Found)
+     */
+    @ExceptionHandler(java.util.NoSuchElementException.class)
+    public ResponseEntity<Map<String, String>> handleNoSuchElementException(
+            java.util.NoSuchElementException ex) {
+
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "Failure");
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    /**
      * Handle generic runtime exceptions
      */
     @ExceptionHandler(RuntimeException.class)

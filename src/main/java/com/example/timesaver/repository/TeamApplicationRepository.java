@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface TeamApplicationRepository extends JpaRepository<TeamApplication, Long> {
     Optional<TeamApplication> findByTeamAndApplicant(Team team, Applicant applicant);
     List<TeamApplication> findByTeamAndStatus(Team team, Status status);
+    List<TeamApplication> findByTeam(Team team);
 }

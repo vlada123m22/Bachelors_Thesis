@@ -39,7 +39,7 @@ public class AuthenticationService {
                     "The username already exists. Please choose another username");
         }
 
-        if(userRepository.findUserByEmail(request.getEmail()).isEmpty())
+        if(userRepository.findUserByEmail(request.getEmail()).isPresent())
             return new SignUpResponse(false,
                     "The email already exists. Please choose another email");
 
@@ -61,7 +61,7 @@ public class AuthenticationService {
                     "The username already exists. Please choose another username");
         }
 
-        if(userRepository.findUserByEmail(request.getEmail()).isEmpty())
+        if(userRepository.findUserByEmail(request.getEmail()).isPresent())
             return new SignUpResponse(false,
                     "The email already exists. Please choose another email");
         User user = new User();

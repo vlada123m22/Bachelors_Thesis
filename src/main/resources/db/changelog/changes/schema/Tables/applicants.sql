@@ -19,12 +19,29 @@ CREATE TABLE IF NOT EXISTS public.applicants
         REFERENCES public.projects (project_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
-    CONSTRAINT FK_applicants_user_id FOREIGN KEY (team_id)
+    CONSTRAINT FK_applicants_user_id FOREIGN KEY (user_id)
     REFERENCES public.users (id) MATCH SIMPLE
                                         ON UPDATE NO ACTION
-                                        ON DELETE NO ACTION,
-)
+                                        ON DELETE NO ACTION
+);
 
 ALTER TABLE applicants
   ADD COLUMN IF NOT EXISTS roles VARCHAR(1000),
   ADD COLUMN IF NOT EXISTS background VARCHAR(1000);
+
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'fk_teams_lead_applicant'
+    ) THEN
+ALTER TABLE public.teams
+    ADD CONSTRAINT fk_teams_lead_applicant
+        FOREIGN KEY (lead_applicant_id)
+            REFERENCES public.applicants (applicant_id)
+            ON UPDATE NO ACTION
+            ON DELETE NO ACTION;
+END IF;
+END $$;
