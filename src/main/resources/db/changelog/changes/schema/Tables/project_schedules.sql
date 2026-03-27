@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.project_schedules
     project_id bigint NOT NULL,
     day_number integer NOT NULL DEFAULT 1,
     start_time timestamp(6) with time zone NOT NULL,
-                                end_time timestamp(6) NOT NULL,
+    end_time timestamp(6) with time zone NOT NULL,
                                 activity_title character varying(255) NOT NULL,
     activity_description character varying(1000),
     CONSTRAINT pk_project_schedules PRIMARY KEY (schedule_id),

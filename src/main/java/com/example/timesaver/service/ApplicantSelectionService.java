@@ -5,6 +5,7 @@ import com.example.timesaver.model.Project;
 import com.example.timesaver.model.User;
 import com.example.timesaver.repository.ApplicantRepository;
 import com.example.timesaver.repository.ProjectRepository;
+import com.example.timesaver.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -16,16 +17,19 @@ import java.util.List;
 public class ApplicantSelectionService {
     private final ApplicantRepository applicantRepository;
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
 
-    public ApplicantSelectionService(ApplicantRepository applicantRepository, ProjectRepository projectRepository) {
+    public ApplicantSelectionService(ApplicantRepository applicantRepository, ProjectRepository projectRepository, UserRepository userRepository) {
         this.applicantRepository = applicantRepository;
         this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
     }
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) return null;
-        return (User) auth.getPrincipal(); // or load by username if you don’t store User in principal
+        String username = auth.getName();
+        return userRepository.findByUserName(username).orElse(null);
     }
 
     private Project requireOrganizerOfProject(Long projectId) {
@@ -39,7 +43,7 @@ public class ApplicantSelectionService {
     }
 
     @Transactional
-    public Applicant setApplicantSelection(Long projectId, Long applicantId, boolean selected) {
+    public void setApplicantSelection(Long projectId, Long applicantId, boolean selected) {
         Project project = requireOrganizerOfProject(projectId);
         Applicant applicant = applicantRepository.findById(applicantId)
                 .orElseThrow(() -> new IllegalArgumentException("Applicant not found"));
@@ -47,7 +51,7 @@ public class ApplicantSelectionService {
             throw new IllegalArgumentException("Applicant does not belong to this project");
         }
         applicant.setIsSelected(selected);
-        return applicantRepository.save(applicant);
+        applicantRepository.save(applicant);
     }
 
     @Transactional

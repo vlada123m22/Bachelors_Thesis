@@ -4,6 +4,7 @@ import com.example.timesaver.model.*;
 import com.example.timesaver.model.TeamApplication.Status;
 import com.example.timesaver.model.dto.teamflow.CreateTeamRequest;
 import com.example.timesaver.model.dto.teamflow.DecisionRequest;
+import com.example.timesaver.model.dto.teamflow.TeamApplicationDTO;
 import com.example.timesaver.model.dto.teamflow.TeamListingDTO;
 import com.example.timesaver.repository.*;
 import jakarta.transaction.Transactional;
@@ -171,7 +172,8 @@ public class TeamApplicationService {
         require(team.getLead() != null && Objects.equals(team.getLead().getApplicantId(), actingLeadApplicantId),
                 "Only the team lead can decide applications");
 
-        TeamApplication app = teamApplicationRepository.findById(appId).orElseThrow();
+        TeamApplication app = teamApplicationRepository.findById(appId)
+                .orElseThrow(() -> new NoSuchElementException("Application not found with id: " + appId));
         require(Objects.equals(app.getTeam().getTeamId(), teamId), "Application does not belong to team");
         require(app.getStatus() == Status.PENDING, "Application already decided");
 
@@ -265,6 +267,25 @@ public class TeamApplicationService {
         memberRoleRepo.deleteByMemberId(memberId);
         memberBgRepo.deleteByMemberId(memberId);
         teamMemberRepository.delete(member);
+    }
+
+    @Transactional
+    public List<TeamApplicationDTO> getTeamApplications(Long teamId, Long actingLeadApplicantId) {
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new NoSuchElementException("Team not found"));
+        require(team.getLead() != null && Objects.equals(team.getLead().getApplicantId(), actingLeadApplicantId),
+                "Only lead can view applications");
+
+        return teamApplicationRepository.findByTeam(team).stream()
+                .map(app -> new TeamApplicationDTO(
+                        app.getId(),
+                        app.getTeam().getTeamId(),
+                        app.getApplicant().getApplicantId(),
+                        app.getApplicant().getFirstName(),
+                        app.getApplicant().getLastName(),
+                        app.getStatus(),
+                        app.getAppliedAt(),
+                        app.getDecisionAt()
+                )).collect(Collectors.toList());
     }
 
     @Transactional

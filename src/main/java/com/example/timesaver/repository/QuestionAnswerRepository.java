@@ -9,6 +9,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface QuestionAnswerRepository extends JpaRepository<QuestionAnswer, Long> {
-    @Query("SELECT new com.example.timesaver.model.dto.applicantsdisplay.display.QuestionAnswerDTO(qa.question.questionNumber, qa.questionAnswer)  FROM QuestionAnswer qa WHERE qa.applicant.applicantId = :applicantId")
+    @Query("SELECT new com.example.timesaver.model.dto.applicants.display.QuestionAnswerDTO(qa.question.questionNumber, qa.questionAnswer)  FROM QuestionAnswer qa WHERE qa.applicant.applicantId = :applicantId")
     List<QuestionAnswerDTO> findQuestionNumberAndAnswerByApplicantId(@Param("applicantId") Long applicantId );
 }
