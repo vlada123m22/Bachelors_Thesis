@@ -148,10 +148,13 @@ public class ApplicationService {
             applicant.setTimezone(timezone.getId());
             applicant.setProject(project);
             applicant.setTeam(null);
-            applicant.setUser(getCurrentUser());
+            applicant.setUser(currentUser);
             applicant.setRoles(PipeList.join(request.getRoles()));
             applicant.setBackground(PipeList.join(request.getBackground()));
-            applicantRepository.save(applicant);
+            applicant = applicantRepository.save(applicant);
+
+            saveQuestionAnswers(request, applicant, project, fileAnswers);
+
             return new ApplicationResponse(
                     "Success",
                     "Application submitted successfully"
@@ -231,95 +234,91 @@ public class ApplicationService {
             applicant = applicantRepository.save(applicant);
 
 
-            Map<Integer, FormQuestion> questionMap = questionRepository.findByProjectId(project.getProjectId()).stream()
-                    .collect(Collectors.toMap(FormQuestion::getQuestionNumber, q -> q));
-
-            //do not need to answer all questions. Later will add a new field for questions: isRequired
-            // 6. Validate all questions are answered
-//            if (request.getQuestionsAnswers().size() != questionMap.size()) {
-//                return new ApplicationResponse("Failure", "All questions must be answered");
-//            }
-
-
-
-            // 7. Save question answers
-            for (QuestionAnswerDTO answerDTO : request.getQuestionsAnswers()) {
-                FormQuestion question = questionMap.get(answerDTO.getQuestionNumber());
-                if (question == null) {
-                    throw new ApplicationException(
-                            "Invalid question number: " + answerDTO.getQuestionNumber()
-                    );
-                }
-
-                // Verify question type matches
-                if (!question.getQuestionType().equals(answerDTO.getQuestionType())) {
-                    throw new ApplicationException(
-                            "Question type mismatch for question " + answerDTO.getQuestionNumber()
-                    );
-                }
-
-                // Verify question itself matches
-                if (!question.getQuestion().equals(answerDTO.getQuestion())) {
-                    throw new ApplicationException(
-                            "Question text mismatch: question nr. " + answerDTO.getQuestionNumber()
-                    );
-                }
-
-                QuestionAnswer  answer = new QuestionAnswer();
-                answer.setQuestion(question);
-                answer.setApplicant(applicant);
-
-                // Handle different question types
-                switch (question.getQuestionType()) {
-                    case FILE:
-                        MultipartFile file = fileAnswers.get(answerDTO.getQuestionNumber());
-                        if (file == null || file.isEmpty()) {
-                            throw new ApplicationException(
-                                    "File not submitted or empty. Question: " + answerDTO.getQuestionNumber()
-                            );
-                        }
-                        try {
-                            String filePath = fileStorageService.storeFile(
-                                    file,
-                                    project.getProjectId(),
-                                    applicant.getApplicantId(),
-                                    answerDTO.getQuestionNumber()
-                            );
-                            answer.setQuestionAnswer(filePath);
-                        } catch (Exception e) {
-                            throw new ApplicationException(
-                                    "Failed to upload file: " + e.getMessage()
-                            );
-                        }
-                        break;
-
-                    case CHECKBOX:
-                        // Checkbox answers stored as "option1|option2|option3"
-                        if (answerDTO.getAnswer() == null || answerDTO.getAnswer().isEmpty()) {
-                            throw new ApplicationException(
-                                    "Answer required for question " + answerDTO.getQuestionNumber()
-                            );
-                        }
-                        answer.setQuestionAnswer(answerDTO.getAnswer());
-                        break;
-
-                    case TEXT:
-                        if (answerDTO.getAnswer() == null || answerDTO.getAnswer().isEmpty()) {
-                            throw new ApplicationException(
-                                    "Answer required for question " + answerDTO.getQuestionNumber()
-                            );
-                        }
-                        answer.setQuestionAnswer(answerDTO.getAnswer());
-                        break;
-                }
-
-                questionAnswerRepository.save(answer);
-            }
+            saveQuestionAnswers(request, applicant, project, fileAnswers);
 
             return new ApplicationResponse(
                     "Success",
                     "Application submitted successfully"
             );
+    }
+
+    private void saveQuestionAnswers(SubmitApplicationRequest request, Applicant applicant, Project project, Map<Integer, MultipartFile> fileAnswers) {
+        Map<Integer, FormQuestion> questionMap = questionRepository.findByProjectId(project.getProjectId()).stream()
+                .collect(Collectors.toMap(FormQuestion::getQuestionNumber, q -> q));
+
+        // 7. Save question answers
+        for (QuestionAnswerDTO answerDTO : request.getQuestionsAnswers()) {
+            FormQuestion question = questionMap.get(answerDTO.getQuestionNumber());
+            if (question == null) {
+                throw new ApplicationException(
+                        "Invalid question number: " + answerDTO.getQuestionNumber()
+                );
+            }
+
+            // Verify question type matches
+            if (!question.getQuestionType().equals(answerDTO.getQuestionType())) {
+                throw new ApplicationException(
+                        "Question type mismatch for question " + answerDTO.getQuestionNumber()
+                );
+            }
+
+            // Verify question itself matches
+            if (!question.getQuestion().equals(answerDTO.getQuestion())) {
+                throw new ApplicationException(
+                        "Question text mismatch: question nr. " + answerDTO.getQuestionNumber()
+                );
+            }
+
+            QuestionAnswer  answer = new QuestionAnswer();
+            answer.setQuestion(question);
+            answer.setApplicant(applicant);
+
+            // Handle different question types
+            switch (question.getQuestionType()) {
+                case FILE:
+                    MultipartFile file = fileAnswers.get(answerDTO.getQuestionNumber());
+                    if (file == null || file.isEmpty()) {
+                        throw new ApplicationException(
+                                "File not submitted or empty. Question: " + answerDTO.getQuestionNumber()
+                        );
+                    }
+                    try {
+                        String filePath = fileStorageService.storeFile(
+                                file,
+                                project.getProjectId(),
+                                applicant.getApplicantId(),
+                                answerDTO.getQuestionNumber()
+                        );
+                        answer.setQuestionAnswer(filePath);
+                    } catch (Exception e) {
+                        throw new ApplicationException(
+                                "Failed to upload file: " + e.getMessage()
+                        );
+                    }
+                    break;
+
+                case CHECKBOX:
+                    // Checkbox answers stored as "option1|option2|option3"
+                    if (answerDTO.getAnswer() == null || answerDTO.getAnswer().isEmpty()) {
+                        throw new ApplicationException(
+                                "Answer required for question " + answerDTO.getQuestionNumber()
+                        );
+                    }
+                    answer.setQuestionAnswer(answerDTO.getAnswer());
+                    break;
+
+                case TEXT:
+                    if (answerDTO.getAnswer() == null || answerDTO.getAnswer().isEmpty()) {
+                        throw new ApplicationException(
+                                "Answer required for question " + answerDTO.getQuestionNumber()
+                        );
+                    }
+                    answer.setQuestionAnswer(answerDTO.getAnswer());
+                    break;
+            }
+
+            questionAnswerRepository.save(answer);
+        }
     }
     private void validateSubset(List<String> subset, List<String> allowed, String fieldName) {
         for (String s : subset) {

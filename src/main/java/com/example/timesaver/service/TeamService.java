@@ -128,7 +128,7 @@ public class TeamService {
 
     @Transactional
     //checks if there are any teams with fewer members than the minimum for this project, and joins them
-    Collection<TeamNrMembers> joinTeams(List<TeamNrMembers> incompleteTeams, Integer maxNr){
+    public Collection<TeamNrMembers> joinTeams(List<TeamNrMembers> incompleteTeams, Integer maxNr){
         //If a team has one member less than the maximum, it cannot be joined with another team, so remove
         incompleteTeams.removeIf(t -> t.getNrOfMembers()==(maxNr-1));
         HashMap<TeamNrMembers, TeamNrMembers> joinedTeams = new HashMap<>();

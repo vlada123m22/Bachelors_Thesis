@@ -27,18 +27,18 @@ import java.util.NoSuchElementException;
 @RestController
 @RequestMapping("/api/teams-flow")
 public class TeamsFlowController {
-    private final TeamApplicationService service;
+    private final TeamApplicationService teamApplicationService;
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final ApplicantRepository applicantRepository;
     private final TeamRepository teamRepository;
 
-    public TeamsFlowController(TeamApplicationService service,
+    public TeamsFlowController(TeamApplicationService teamApplicationService,
                                UserRepository userRepository,
                                ProjectRepository projectRepository,
                                ApplicantRepository applicantRepository,
                                TeamRepository teamRepository) {
-        this.service = service;
+        this.teamApplicationService = teamApplicationService;
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.applicantRepository = applicantRepository;
@@ -70,7 +70,7 @@ public class TeamsFlowController {
                                              @Valid @RequestBody CreateTeamRequest req) {
 
         try {
-            Team team = service.createTeam(projectId, currentApplicantId(projectId), req);
+            Team team = teamApplicationService.createTeam(projectId, currentApplicantId(projectId), req);
             return ResponseEntity.status(HttpStatus.CREATED).body(null);
         }catch (Exception e){
             e.printStackTrace();
@@ -86,7 +86,7 @@ public class TeamsFlowController {
         // For now, let's find the team to get the project ID.
         // Alternatively, we could update the service to take User instead of applicantId.
         Long projectId = findProjectIdByTeamId(teamId);
-        service.applyToTeam(teamId, currentApplicantId(projectId));
+        teamApplicationService.applyToTeam(teamId, currentApplicantId(projectId));
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
@@ -96,7 +96,7 @@ public class TeamsFlowController {
                                          @RequestBody DecisionRequest req) {
         try {
             Long projectId = findProjectIdByTeamId(teamId);
-            service.decideApplication(teamId, appId, currentApplicantId(projectId), req);
+            teamApplicationService.decideApplication(teamId, appId, currentApplicantId(projectId), req);
             return ResponseEntity.status(HttpStatus.CREATED).body(null);
         }catch (Exception e){
             e.printStackTrace();
@@ -107,20 +107,20 @@ public class TeamsFlowController {
     @GetMapping("/teams/{teamId}/applications")
     public ResponseEntity<List<TeamApplicationDTO>> getTeamApplications(@PathVariable Long teamId) {
         Long projectId = findProjectIdByTeamId(teamId);
-        return ResponseEntity.ok(service.getTeamApplications(teamId, currentApplicantId(projectId)));
+        return ResponseEntity.ok(teamApplicationService.getTeamApplications(teamId, currentApplicantId(projectId)));
     }
 
     @DeleteMapping("/teams/{teamId}/members/{memberId}")
     public ResponseEntity<Void> kick(@PathVariable Long teamId, @PathVariable Long memberId) {
         Long projectId = findProjectIdByTeamId(teamId);
-        service.removeMember(teamId, memberId, currentApplicantId(projectId));
+        teamApplicationService.removeMember(teamId, memberId, currentApplicantId(projectId));
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/teams/{teamId}/members/{memberId}/leave")
     public ResponseEntity<Void> leave(@PathVariable Long teamId, @PathVariable Long memberId) {
         Long projectId = findProjectIdByTeamId(teamId);
-        service.leaveTeam(teamId, memberId, currentApplicantId(projectId));
+        teamApplicationService.leaveTeam(teamId, memberId, currentApplicantId(projectId));
         return ResponseEntity.ok().build();
     }
 
@@ -132,7 +132,7 @@ public class TeamsFlowController {
 
     @GetMapping("/projects/{projectId}/teams")
     public ResponseEntity<List<TeamListingDTO>> list(@PathVariable Long projectId) {
-        return ResponseEntity.ok(service.listTeams(projectId));
+        return ResponseEntity.ok(teamApplicationService.listTeams(projectId));
     }
 
 }
