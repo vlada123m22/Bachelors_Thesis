@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS public.user_roles
         REFERENCES public.users (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
-    CONSTRAINT user_roles_roles_check CHECK (roles::text = ANY (ARRAY['ORGANIZER'::character varying, 'PARTICIPANT'::character varying, 'ADMIN'::character varying]::text[]))
+    CONSTRAINT user_roles_roles_check CHECK (roles::text = ANY (ARRAY['ORGANIZER'::character varying, 'PARTICIPANT'::character varying, 'ADMIN'::character varying, 'MENTOR'::character varying]::text[]))
 )
