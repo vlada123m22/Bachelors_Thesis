@@ -8,6 +8,7 @@ import com.example.timesaver.model.dto.teamflow.TeamListingDTO;
 import com.example.timesaver.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -303,5 +304,141 @@ public class TeamApplicationServiceTest {
         assertThrows(java.util.NoSuchElementException.class, () -> {
             teamApplicationService.decideApplication(teamId, appId, actingLeadApplicantId, req);
         });
+    }
+
+    @Test
+    @DisplayName("Should decide application REJECT")
+    void testDecideApplicationReject() {
+        Team team = new Team();
+        team.setTeamId(1L);
+        Applicant lead = new Applicant();
+        lead.setApplicantId(10L);
+        team.setLead(lead);
+
+        TeamApplication app = new TeamApplication();
+        app.setTeam(team);
+        app.setStatus(TeamApplication.Status.PENDING);
+
+        when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
+        when(teamApplicationRepository.findById(100L)).thenReturn(Optional.of(app));
+
+        DecisionRequest req = new DecisionRequest("REJECT", null, null);
+        teamApplicationService.decideApplication(1L, 100L, 10L, req);
+
+        assertEquals(TeamApplication.Status.REJECTED, app.getStatus());
+        verify(teamApplicationRepository).save(app);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when non-lead decides application")
+    void testDecideApplicationNotLead() {
+        Team team = new Team();
+        team.setTeamId(1L);
+        Applicant lead = new Applicant();
+        lead.setApplicantId(10L);
+        team.setLead(lead);
+
+        when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
+
+        DecisionRequest req = new DecisionRequest("ACCEPT", null, null);
+        assertThrows(RuntimeException.class, () -> 
+            teamApplicationService.decideApplication(1L, 100L, 99L, req));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when application team mismatch")
+    void testDecideApplicationTeamMismatch() {
+        Team team = new Team();
+        team.setTeamId(1L);
+        Applicant lead = new Applicant();
+        lead.setApplicantId(10L);
+        team.setLead(lead);
+
+        Team otherTeam = new Team();
+        otherTeam.setTeamId(2L);
+        TeamApplication app = new TeamApplication();
+        app.setTeam(otherTeam);
+
+        when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
+        when(teamApplicationRepository.findById(100L)).thenReturn(Optional.of(app));
+
+        DecisionRequest req = new DecisionRequest("ACCEPT", null, null);
+        assertThrows(RuntimeException.class, () -> 
+            teamApplicationService.decideApplication(1L, 100L, 10L, req));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when application already decided")
+    void testDecideApplicationAlreadyDecided() {
+        Team team = new Team();
+        team.setTeamId(1L);
+        Applicant lead = new Applicant();
+        lead.setApplicantId(10L);
+        team.setLead(lead);
+
+        TeamApplication app = new TeamApplication();
+        app.setTeam(team);
+        app.setStatus(TeamApplication.Status.ACCEPTED);
+
+        when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
+        when(teamApplicationRepository.findById(100L)).thenReturn(Optional.of(app));
+
+        DecisionRequest req = new DecisionRequest("ACCEPT", null, null);
+        assertThrows(RuntimeException.class, () -> 
+            teamApplicationService.decideApplication(1L, 100L, 10L, req));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when team is full")
+    void testDecideApplicationTeamFull() {
+        Team team = new Team();
+        team.setTeamId(1L);
+        Applicant lead = new Applicant();
+        lead.setApplicantId(10L);
+        team.setLead(lead);
+        Project p = new Project();
+        p.setMaxNrParticipants(1); // Only lead fits
+        team.setProject(p);
+
+        TeamApplication app = new TeamApplication();
+        app.setTeam(team);
+        app.setStatus(TeamApplication.Status.PENDING);
+
+        when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
+        when(teamApplicationRepository.findById(100L)).thenReturn(Optional.of(app));
+
+        DecisionRequest req = new DecisionRequest("ACCEPT", null, null);
+        assertThrows(RuntimeException.class, () -> 
+            teamApplicationService.decideApplication(1L, 100L, 10L, req));
+    }
+
+    @Test
+    @DisplayName("Should fail to leave team if not member")
+    void testLeaveTeamNotMember() {
+        Team team = new Team();
+        team.setTeamId(1L);
+        TeamMember member = new TeamMember();
+        Team otherTeam = new Team();
+        otherTeam.setTeamId(2L);
+        member.setTeam(otherTeam);
+
+        when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
+        when(teamMemberRepository.findById(50L)).thenReturn(Optional.of(member));
+
+        assertThrows(RuntimeException.class, () -> teamApplicationService.leaveTeam(1L, 50L, 10L));
+    }
+
+    @Test
+    @DisplayName("Should fail to remove member if not lead")
+    void testRemoveMemberNotLead() {
+        Team team = new Team();
+        team.setTeamId(1L);
+        Applicant lead = new Applicant();
+        lead.setApplicantId(10L);
+        team.setLead(lead);
+
+        when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
+
+        assertThrows(RuntimeException.class, () -> teamApplicationService.removeMember(1L, 50L, 99L));
     }
 }

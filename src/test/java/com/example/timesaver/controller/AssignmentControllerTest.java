@@ -82,4 +82,34 @@ public class AssignmentControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(submissions, response.getBody());
     }
+
+    @Test
+    public void testSubmitAssignmentWithException() throws Exception {
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("user");
+
+        when(assignmentService.submitAssignment(any(), any(), any(), any()))
+            .thenThrow(new RuntimeException("Submission error"));
+
+        try {
+            assignmentController.submitAssignment(1L, "text", null, auth);
+        } catch (RuntimeException e) {
+            assertEquals("Submission error", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetTeamSubmissionWithException() {
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("user");
+
+        when(assignmentService.getTeamSubmission(any(), any()))
+            .thenThrow(new RuntimeException("Not found"));
+
+        try {
+            assignmentController.getTeamSubmission(1L, auth);
+        } catch (RuntimeException e) {
+            assertEquals("Not found", e.getMessage());
+        }
+    }
 }

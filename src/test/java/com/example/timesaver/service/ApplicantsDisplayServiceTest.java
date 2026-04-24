@@ -8,6 +8,7 @@ import com.example.timesaver.repository.ApplicantRepository;
 import com.example.timesaver.repository.QuestionAnswerRepository;
 import com.example.timesaver.repository.QuestionRepository;
 import com.example.timesaver.repository.TeamRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -104,5 +105,22 @@ public class ApplicantsDisplayServiceTest {
         assertEquals("Team A", result.getParticipantsWithTeams().get(0).getTeamName());
         assertEquals(1, result.getParticipantsWithoutTeams().size());
         assertEquals("Jane", result.getParticipantsWithoutTeams().get(0).getFirstName());
+    }
+
+    @Test
+    @DisplayName("Should handle team with no members (filter out)")
+    void testGetTeamsWithEmptyMemberTeam() {
+        Long projectId = 1L;
+        Team team = new Team();
+        team.setTeamId(10L);
+        team.setTeamName("Empty Team");
+        
+        when(teamRepository.findAllTeamsByProject(projectId)).thenReturn(List.of(team));
+        when(applicantRepository.getSingleApplicantsFirstAndLastName(projectId)).thenReturn(Collections.emptyList());
+        when(applicantRepository.getFirstAndLastNameByTeam(projectId, 10L)).thenReturn(Collections.emptyList());
+
+        GetTeamsDTO result = applicantsDisplayService.getTeams(projectId);
+
+        assertTrue(result.getTeams().isEmpty());
     }
 }

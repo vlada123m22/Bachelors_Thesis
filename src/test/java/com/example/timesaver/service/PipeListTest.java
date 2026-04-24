@@ -43,8 +43,8 @@ public class PipeListTest {
 
     @Test
     public void testSplitWithWhitespace() {
-        String s = " A | B | C ";
-        List<String> expected = Arrays.asList("A", "B", "C");
+        String s = " A | Borrow Milk | C ";
+        List<String> expected = Arrays.asList("A", "Borrow Milk", "C");
         assertEquals(expected, PipeList.split(s));
     }
 
@@ -54,5 +54,17 @@ public class PipeListTest {
         assertTrue(PipeList.split("").isEmpty());
         assertTrue(PipeList.split("   ").isEmpty());
         assertTrue(PipeList.split("|||").isEmpty());
+    }
+
+    @Test
+    public void testSplitSingleValue() {
+        assertEquals(Arrays.asList("A"), PipeList.split("A"));
+        assertEquals(Arrays.asList("A"), PipeList.split(" A "));
+    }
+
+    @Test
+    public void testJoinSingleValue() {
+        assertEquals("A", PipeList.join(Arrays.asList("A")));
+        assertEquals("A", PipeList.join(Arrays.asList(" A ")));
     }
 }
