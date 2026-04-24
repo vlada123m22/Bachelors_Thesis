@@ -1,0 +1,996 @@
+{
+  "info": {
+    "_postman_id": "241b686e-537f-4be9-9b76-4e1a50d7e2f5",
+    "name": "TimeSaver API - Complete Copy",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "29917238"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Role Tests",
+          "item": [
+            {
+              "name": "Test Auth",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/test",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "test"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Test Admin",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/admin/test",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "admin",
+                    "test"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Test Organizer",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/organizer/test",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "organizer",
+                    "test"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Test Participant",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/participant/test",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "participant",
+                    "test"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Signup Organizer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"UserName\": \"organizer12\",\n    \"Password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup/organizer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup",
+                "organizer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Signup Participant",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"UserName\": \"MyLove\",\n    \"Password\": \"password123\",\n    \"Email\": \"part1@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup/participant",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup",
+                "participant"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Signup Admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"UserName\": \"admin1\",\n    \"Password\": \"adminpass\",\n    \"Email\": \"admin@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup/admin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup",
+                "admin"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) { pm.collectionVariables.set(\"token\", jsonData.token); }"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"UserName\": \"John\",\n    \"Password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"projectName\": \"Third Hack\",\n    \"projectDescription\": \"Description\",\n    \"startDate\": \"2026-03-01T09:00:00Z\",\n    \"endDate\": \"2026-03-03T09:00:00Z\",\n    \"maxNrParticipants\": 100,\n    \"minNrParticipants\": 2,\n    \"teamsPreformed\": false,\n    \"formQuestions\": [\n        { \"questionNumber\": 1, \"questionType\": \"TEXT\", \"question\": \"Question 1?\" }\n    ],\n    \"roleOptions\": [\"Developer\"],\n    \"backgroundOptions\": [\"CS\"],\n    \"schedules\":[{\"dayNumber\":1,\"startTime\":\"2026-03-01T09:00Z\", \"endTime\":\"2026-03-01T10:00Z\", \"activityTitle\":\"Opening\"},\n                   {\"dayNumber\":1,\"startTime\":\"2026-03-01T10:00Z\", \"endTime\":\"2026-03-01T22:00Z\", \"activityTitle\":\"Work\"},\n                   {\"dayNumber\":2,\"startTime\":\"2026-03-02T09:00Z\", \"endTime\":\"2026-03-02T22:00Z\", \"activityTitle\":\"Work\"}\n                ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"projectId\": 1,\n    \"projectName\": \"Updated Project Name\",\n    \"formQuestions\": [\n        { \"questionNumber\": 1, \"questionType\": \"TEXT\", \"question\": \"Updated Question?\" }\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All My Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Project Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Timezone",
+                "value": "UTC"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/:projectId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                ":projectId"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Schedule for Day",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/:projectId/schedule/:dayNumber",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                ":projectId",
+                "schedule",
+                ":dayNumber"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "3"
+                },
+                {
+                  "key": "dayNumber",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/:projectId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                ":projectId"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Applications (Public)",
+      "item": [
+        {
+          "name": "Get Form",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projects/apply/:projectId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "apply",
+                ":projectId"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJKb2huIiwicm9sZXMiOlsiUEFSVElDSVBBTlQiXSwiaWF0IjoxNzczMTY3Mzc0LCJleHAiOjE3NzMyNTM3NzR9.y2eBnuba6-Ncqm7at1P1XwFI4pgA7ipxnelAgfdhGeI",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "applicationData",
+                  "value": "{\n    \"projectId\": 3,\n    \"firstName\": \"Johnny\",\n    \"lastName\": \"Mike\",\n    \"joinExistentTeam\": false,\n    \"timezone\": \"UTC\",\n    \"questionsAnswers\": [{ \"questionNumber\": 1, \"questionType\": \"TEXT\", \"question\": \"Q?\", \"answer\": \"A\" }],\n    \"roles\":[\"Developer\"],\n    \"background\":[\"CS\"]\n}",
+                  "type": "text"
+                },
+                {
+                  "key": "file_1",
+                  "type": "file",
+                  "description": "Example if question 1 is FILE type",
+                  "value": null,
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects/apply",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projects",
+                "apply"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organizer Dashboard",
+      "item": [
+        {
+          "name": "Display Participants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/:projectId/participants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ":projectId",
+                "participants"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Display Teams",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/:projectId/teams",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ":projectId",
+                "teams"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Single Selection",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"selected\": true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/:projectId/applicants/:applicantId/selection",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ":projectId",
+                "applicants",
+                ":applicantId",
+                "selection"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "1"
+                },
+                {
+                  "key": "applicantId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Selection",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"applicantIds\": [5, 2, 3], \"selected\": true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/:projectId/applicants/selection",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ":projectId",
+                "applicants",
+                "selection"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auto-Create Teams",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/:projectId/create-teams",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ":projectId",
+                "create-teams"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Teams Flow (Participant Interactions)",
+      "item": [
+        {
+          "name": "List Project Teams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/teams-flow/projects/:projectId/teams",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teams-flow",
+                "projects",
+                ":projectId",
+                "teams"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Team (Manual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"projectId\": 1, \"ideaTitle\": \"Hack\", \"roles\": [{\"code\": \"Dev\", \"min\": 1, \"max\": 2}]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/teams-flow/projects/:projectId/teams",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teams-flow",
+                "projects",
+                ":projectId",
+                "teams"
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Apply to Team",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJKb2huIiwicm9sZXMiOlsiUEFSVElDSVBBTlQiXSwiaWF0IjoxNzczMTY4NzIxLCJleHAiOjE3NzMyNTUxMjF9.zaVYymjFc74pDZNQ8sFG1VlmIBaI71Hx6Vk2zhSUsO4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/teams-flow/teams/:teamId/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teams-flow",
+                "teams",
+                ":teamId",
+                "applications"
+              ],
+              "variable": [
+                {
+                  "key": "teamId",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Decide on Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"decision\": \"ACCEPT\",\n    \"assignRoles\": [\"Dev\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/teams-flow/teams/:teamId/applications/:appId/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teams-flow",
+                "teams",
+                ":teamId",
+                "applications",
+                ":appId",
+                "decision"
+              ],
+              "variable": [
+                {
+                  "key": "teamId",
+                  "value": "1"
+                },
+                {
+                  "key": "appId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Kick Member",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/teams-flow/teams/:teamId/members/:memberId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teams-flow",
+                "teams",
+                ":teamId",
+                "members",
+                ":memberId"
+              ],
+              "variable": [
+                {
+                  "key": "teamId",
+                  "value": "1"
+                },
+                {
+                  "key": "memberId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Leave Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/teams-flow/teams/:teamId/members/:memberId/leave",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teams-flow",
+                "teams",
+                ":teamId",
+                "members",
+                ":memberId",
+                "leave"
+              ],
+              "variable": [
+                {
+                  "key": "teamId",
+                  "value": "1"
+                },
+                {
+                  "key": "memberId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "View Team Applications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJNeUxvdmUiLCJyb2xlcyI6WyJQQVJUSUNJUEFOVCJdLCJpYXQiOjE3NzMxNjcwNjgsImV4cCI6MTc3MzI1MzQ2OH0.J75kpxwJLtcpFyxKgBA3yUIBqoxmzoQ1b68Ue8M0hyU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/teams-flow/teams/:teamId/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "teams-flow",
+                "teams",
+                ":teamId",
+                "applications"
+              ],
+              "variable": [
+                {
+                  "key": "teamId",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvcmdhbml6ZXIxIiwicm9sZXMiOlsiT1JHQU5JWkVSIl0sImlhdCI6MTc3MzE2MTg1NywiZXhwIjoxNzczMjQ4MjU3fQ.tXe3AJ6OmFEbadtRpLtc8WyFb1jVn4jjZIbxrmRYm2A",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}
