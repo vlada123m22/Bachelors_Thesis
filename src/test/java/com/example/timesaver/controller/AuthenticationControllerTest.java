@@ -130,4 +130,46 @@ public class AuthenticationControllerTest {
         ResponseEntity<SignUpResponse> response = authenticationController.signUpMentor(req);
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
+
+    @Test
+    public void testSignUpOrganizerEmailConflict() {
+        SignUpRequest req = new SignUpRequest();
+        SignUpResponse resp = new SignUpResponse(false, "The email already exists. Please choose another email");
+
+        when(authService.registerOrganizer(any())).thenReturn(resp);
+
+        ResponseEntity<SignUpResponse> response = authenticationController.signUpOrganizer(req);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+    @Test
+    public void testSignUpEmailConflict() {
+        SignUpRequest req = new SignUpRequest();
+        SignUpResponse resp = new SignUpResponse(false, "The email already exists. Please choose another email");
+        when(authService.registerOrganizer(any())).thenReturn(resp);
+
+        ResponseEntity<SignUpResponse> response = authenticationController.signUp(req);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+    @Test
+    public void testSignUpConflict() {
+        SignUpRequest req = new SignUpRequest();
+        SignUpResponse resp = new SignUpResponse(false, "The username already exists. Please choose another username");
+        when(authService.registerOrganizer(any())).thenReturn(resp);
+
+        ResponseEntity<SignUpResponse> response = authenticationController.signUp(req);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+    @Test
+    public void testSignUpParticipantOtherError() {
+        SignUpRequest req = new SignUpRequest();
+        SignUpResponse resp = new SignUpResponse(false, "Some other error");
+        when(authService.registerParticipant(any())).thenReturn(resp);
+
+        ResponseEntity<SignUpResponse> response = authenticationController.signUpParticipant(req);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
 }

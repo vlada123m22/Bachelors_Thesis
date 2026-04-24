@@ -153,4 +153,134 @@ public class ApplicantSelectionServiceTest {
             applicantSelectionService.bulkSetSelection(projectId, List.of(10L), true);
         });
     }
+
+    @Test
+    public void testGetCurrentUserReturnsNullWhenNotAuthenticated() {
+        when(securityContext.getAuthentication()).thenReturn(null);
+        Long projectId = 1L;
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
+        assertThrows(SecurityException.class, () -> {
+            applicantSelectionService.setApplicantSelection(projectId, 2L, true);
+        });
+    }
+
+    @Test
+    public void testGetCurrentUserReturnsNullWhenAuthenticationNotAuthenticated() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(false);
+        Long projectId = 1L;
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
+        assertThrows(SecurityException.class, () -> {
+            applicantSelectionService.setApplicantSelection(projectId, 2L, true);
+        });
+    }
+
+    @Test
+    public void testProjectNotFound() {
+        when(projectRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> {
+            applicantSelectionService.setApplicantSelection(1L, 2L, true);
+        });
+    }
+
+    @Test
+    public void testApplicantNotFound() {
+        Long projectId = 1L;
+        Long userId = 3L;
+        mockUser("organizer", userId);
+
+        Project project = new Project();
+        project.setProjectId(projectId);
+        User organizer = new User();
+        organizer.setId(userId);
+        project.setOrganizer(organizer);
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(applicantRepository.findById(2L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            applicantSelectionService.setApplicantSelection(projectId, 2L, true);
+        });
+    }
+
+    @Test
+    public void testApplicantBelongsToWrongProject() {
+        Long projectId = 1L;
+        Long applicantId = 2L;
+        Long userId = 3L;
+        mockUser("organizer", userId);
+
+        Project project = new Project();
+        project.setProjectId(projectId);
+        User organizer = new User();
+        organizer.setId(userId);
+        project.setOrganizer(organizer);
+
+        Project otherProject = new Project();
+        otherProject.setProjectId(99L);
+
+        Applicant applicant = new Applicant();
+        applicant.setApplicantId(applicantId);
+        applicant.setProject(otherProject);
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(applicantRepository.findById(applicantId)).thenReturn(Optional.of(applicant));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            applicantSelectionService.setApplicantSelection(projectId, applicantId, true);
+        });
+    }
+
+    @Test
+    public void testSetApplicantSelectionToFalse() {
+        Long projectId = 1L;
+        Long applicantId = 2L;
+        Long userId = 3L;
+        mockUser("organizer", userId);
+
+        Project project = new Project();
+        project.setProjectId(projectId);
+        User organizer = new User();
+        organizer.setId(userId);
+        project.setOrganizer(organizer);
+
+        Applicant applicant = new Applicant();
+        applicant.setApplicantId(applicantId);
+        applicant.setProject(project);
+        applicant.setIsSelected(true);
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(applicantRepository.findById(applicantId)).thenReturn(Optional.of(applicant));
+
+        applicantSelectionService.setApplicantSelection(projectId, applicantId, false);
+
+        assertFalse(applicant.getIsSelected());
+        verify(applicantRepository).save(applicant);
+    }
+
+    @Test
+    public void testBulkSetSelectionToFalse() {
+        Long projectId = 1L;
+        Long userId = 3L;
+        mockUser("organizer", userId);
+
+        Project project = new Project();
+        project.setProjectId(projectId);
+        User organizer = new User();
+        organizer.setId(userId);
+        project.setOrganizer(organizer);
+
+        Applicant a1 = new Applicant();
+        a1.setProject(project);
+        a1.setIsSelected(true);
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(applicantRepository.findAllById(any())).thenReturn(List.of(a1));
+
+        int updated = applicantSelectionService.bulkSetSelection(projectId, List.of(10L), false);
+
+        assertEquals(1, updated);
+        assertFalse(a1.getIsSelected());
+        verify(applicantRepository).saveAll(any());
+    }
 }
