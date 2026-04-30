@@ -22,17 +22,16 @@ import java.util.stream.Collectors;
 public class ApplicationService {
 
     private final ProjectRepository projectRepository;
-    private final TeamRepository teamRepository;
     private final ApplicantRepository applicantRepository;
     private final QuestionAnswerRepository questionAnswerRepository;
     private final FileStorageService fileStorageService;
     private final QuestionRepository questionRepository;
+
     @Autowired
     private UserRepository userRepository;
 
-    public ApplicationService(ProjectRepository projectRepository, TeamRepository teamRepository, ApplicantRepository applicantRepository, QuestionAnswerRepository questionAnswerRepository, FileStorageService fileStorageService, QuestionRepository questionRepository) {
+    public ApplicationService(ProjectRepository projectRepository, ApplicantRepository applicantRepository, QuestionAnswerRepository questionAnswerRepository, FileStorageService fileStorageService, QuestionRepository questionRepository) {
         this.projectRepository = projectRepository;
-        this.teamRepository = teamRepository;
         this.applicantRepository = applicantRepository;
         this.questionAnswerRepository = questionAnswerRepository;
         this.fileStorageService = fileStorageService;
@@ -53,16 +52,27 @@ public class ApplicationService {
      * Get form questions for a project (public endpoint)
      */
     @Transactional(readOnly = true)
-    public GetFormResponse getFormForProject(Long projectId) {
-        Optional<Project> projectOpt = projectRepository.findById(projectId);
+    public GetFormResponse getFormForProject(Integer projectId) {
+        GetFormResponse response = new GetFormResponse();
+        Optional<Project> projectBackgroundsRolesOpt = projectRepository.getBackgroundsRolesByProjectId(projectId);
 
-        if (projectOpt.isEmpty()) {
+        if (projectBackgroundsRolesOpt.isEmpty()){
             throw new RuntimeException("Project not found");
         }
 
-        //Project project = projectOpt.get();
+        Project projectBackgroundsRoles = projectBackgroundsRolesOpt.get();
+        List<String> allowedRoles = PipeList.split(projectBackgroundsRoles.getRolesOptions());
+        List<String> allowedBkg = PipeList.split(projectBackgroundsRoles.getBackgroundOptions());
 
-        List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectId(projectId).stream()
+        response.setBackgroundOptions(allowedBkg);
+        response.setRoleOptions(allowedRoles);
+/* 1. Lookup project for bckd and roles, by projectId - done
+2. Lookup questions by projectID (questionNumber, QuestionType, question, checkboxOptions)
+* */
+
+
+
+        List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectIdFormRetrieval(projectId).stream()
                 .sorted(Comparator.comparing(FormQuestion::getQuestionNumber))
                 .map(q -> {
                     FormQuestionDTO dto = new FormQuestionDTO();
@@ -74,7 +84,7 @@ public class ApplicationService {
                 })
                 .collect(Collectors.toList());
 
-        return new GetFormResponse(questionDTOs);
+        return new GetFormResponse(questionDTOs, allowedRoles, allowedBkg);
     }
 
     /**
@@ -84,166 +94,75 @@ public class ApplicationService {
     public ApplicationResponse submitApplication(
             SubmitApplicationRequest request,
             Map<Integer, MultipartFile> fileAnswers) {
+            Integer userId = Math.toIntExact(getCurrentUser().getId());
+
+            ZoneId timezone = ZoneId.of(request.getTimezone());
+            String roles = PipeList.join(request.getRoles());
+            String backgrounds = PipeList.join(request.getBackground());
+            ZonedDateTime registrationTimestamp = ZonedDateTime.now(timezone);
+
+            //The query in applicantRepository is expected to return one single row
+            ApplicantTeam applicantTeam = applicantRepository.saveApplicant(userId, request.getProjectId(),
+                    request.getFirstName(), request.getLastName(), request.getTeamName(), request.getJoinExistentTeam(),
+                    request.getTimezone(), registrationTimestamp, roles, backgrounds).getFirst();
+
+            Integer applicantId = applicantTeam.getApplicantId();
+            Integer teamId = applicantTeam.getTeamId();
 
 
-        // 1. Find project
-        Project project = projectRepository
-                .findById(request.getProjectId())
-                .orElseThrow(() ->
-                        new ApplicationException("Project not found")
+            if (applicantId == 0)
+                return new ApplicationResponse(
+                "404: Not Found",
+                "The project with the indicated id was not found"
+                );
+            else if (applicantId==-1)
+                return new ApplicationResponse(
+                        "401: Unauthorized",
+                        "You must have an account to apply for this project. Please log in or sign up."
+                );
+            else if(applicantId == -2)
+                return new ApplicationResponse(
+                        "409: Conflict",
+                        "The team already exists. Please join the team or choose a different name.",
+                        true
+                );
+            else if (applicantId == -3)
+                return new ApplicationResponse(
+                        "400: Bad Request",
+                        "This message is meant for the frontend developer. The roles or backgrounds the user has selected are not allowed for this project. Please display on the UI to the user the roles and backgrounds returned by the following endpoint: GET /projects/apply/{projectId}"
                 );
 
-        User currentUser = getCurrentUser();
-        // If teamsPreformed is false, an account is required
-        if (Boolean.FALSE.equals(project.getTeamsPreformed())) {
-            if (currentUser == null) {
-                throw new ApplicationException("An account is required to apply. Please log in or sign up.");
-            }
-        }
 
-            // 2. Validate timezone
-            ZoneId timezone;
-            try {
-                timezone = ZoneId.of(request.getTimezone());
-            } catch (Exception e) {
-                throw new ApplicationException("Invalid timezone: " + request.getTimezone());
-            }
+        //Process teammates
+        if (request.getTeammates() != null && !request.getTeammates().isEmpty() && !Objects.isNull(teamId)) {
+            for (TeammateDTO teammateDTO : request.getTeammates()) {
+                Optional<Integer> teammateOpt = applicantRepository
+                        .getIdByNameAndProjectAndTeamId(
+                                teammateDTO.getFirstName(),
+                                teammateDTO.getLastName(),
+                                request.getProjectId(),
+                                teamId
+                        );
 
-        List<String> allowedRoles = PipeList.split(project.getRolesOptions());
-        List<String> allowedBkg = PipeList.split(project.getBackgroundOptions());
-
-        validateSubset(request.getRoles(), allowedRoles, "roles");
-        validateSubset(request.getBackground(), allowedBkg, "background");
-
-
-        // 3. Check if team exists (case-insensitive)
-            Optional<Team> existingTeamOpt = teamRepository
-                    .findByTeamNameIgnoreCaseAndProject(request.getTeamName(), project);
-
-            // CHECK 1: Team exists check
-            if (existingTeamOpt.isPresent() && !request.getJoinExistentTeam()) {
-                return  new ApplicationResponse("Failure", "Team "+request.getTeamName() + " already exists", Boolean.TRUE);
-            }
-
-        if (Objects.isNull(request.getTeamName()) && !Objects.isNull(request.getTeammates()) && !request.getTeammates().isEmpty()) {
-            throw new ApplicationException(
-                    "A team name must be provided if you are joining with a team!"
-            );
-        }
-
-        if (!Objects.isNull(request.getTeamName()) && (Objects.isNull(request.getTeammates()) || request.getTeammates().isEmpty())) {
-            throw new ApplicationException(
-                    "A team must consist of more than 1 member. You must either add a few teammates or leave the team name blank"
-            );
-        }
-
-        //save the applicant that is joining without a team
-        if (Objects.isNull(request.getTeamName())) {
-            Applicant applicant = new Applicant();
-            applicant.setFirstName(request.getFirstName());
-            applicant.setLastName(request.getLastName());
-            applicant.setHasApplied(true);
-            applicant.setRegistrationTimestamp(ZonedDateTime.now(timezone));
-            applicant.setIsSelected(false);
-            applicant.setTimezone(timezone.getId());
-            applicant.setProject(project);
-            applicant.setTeam(null);
-            applicant.setUser(currentUser);
-            applicant.setRoles(PipeList.join(request.getRoles()));
-            applicant.setBackground(PipeList.join(request.getBackground()));
-            applicant = applicantRepository.save(applicant);
-
-            saveQuestionAnswers(request, applicant, project, fileAnswers);
-
-            return new ApplicationResponse(
-                    "Success",
-                    "Application submitted successfully"
-            );
-        }
-
-        // 4. Get or create team
-        Team team =null;
-        if (existingTeamOpt.isPresent()) {
-            team = existingTeamOpt.get();
-            team.setDateUpdated(ZonedDateTime.now(timezone));
-        } else if (!Objects.isNull(request.getTeamName())&&!request.getTeamName().isEmpty()&&!request.getTeamName().isBlank())
-        {
-            team = new Team();
-            team.setTeamName(request.getTeamName());
-            team.setProject(project);
-            team.setDateCreated(ZonedDateTime.now(timezone));
-            team.setDateUpdated(ZonedDateTime.now(timezone));
-            team = teamRepository.save(team);
-        }
-        
-            // 5. Process teammates (add them if not exists, with hasApplied = false)
-            if (request.getTeammates() != null && !request.getTeammates().isEmpty() && !Objects.isNull(team)) {
-                for (TeammateDTO teammateDTO : request.getTeammates()) {
-                    Optional<Applicant> teammateOpt = applicantRepository
-                            .findByNameAndProjectAndTeam(
-                                    teammateDTO.getFirstName(),
-                                    teammateDTO.getLastName(),
-                                    project,
-                                    team
-                            );
-
-                    if (teammateOpt.isEmpty()) {
-                        Applicant teammate = new Applicant();
-                        teammate.setFirstName(teammateDTO.getFirstName());
-                        teammate.setLastName(teammateDTO.getLastName());
-                        teammate.setProject(project);
-                        teammate.setTeam(team);
-                        teammate.setHasApplied(false);
-                        teammate.setIsSelected(false);
-                        teammate.setRegistrationTimestamp(ZonedDateTime.now(timezone));
-                        teammate.setTimezone(timezone.getId());
-                        applicantRepository.save(teammate);
-                    }
+                if (teammateOpt.isEmpty()) {
+                    applicantRepository.insertApplicant(teammateDTO.getFirstName(), teammateDTO.getLastName(), request.getProjectId(), teamId, registrationTimestamp, timezone.getId());
                 }
             }
+        }
 
-            // CHECK 2: Check if applicant was already added by teammates
-            Optional<Applicant> existingApplicantOpt = applicantRepository
-                    .findByNameAndProjectAndTeam(
-                            request.getFirstName(),
-                            request.getLastName(),
-                            project,
-                            team
-                    );
+        saveQuestionAnswers(request, applicantId, request.getProjectId(), fileAnswers);
 
-            Applicant applicant;
-            if (existingApplicantOpt.isPresent()) {
-                // Applicant exists, update hasApplied to true
-                applicant = existingApplicantOpt.get();
-                applicant.setHasApplied(true);
-                applicant.setRegistrationTimestamp(ZonedDateTime.now(timezone));
-                applicant.setTimezone(timezone.getId());
-            } else {
-                // Create new applicant
-                applicant = new Applicant();
-                applicant.setFirstName(request.getFirstName());
-                applicant.setLastName(request.getLastName());
-                applicant.setProject(project);
-                applicant.setTeam(team);
-                applicant.setHasApplied(true);
-                applicant.setIsSelected(false);
-                applicant.setRegistrationTimestamp(ZonedDateTime.now(timezone));
-                applicant.setTimezone(timezone.getId());
-            }
-
-            applicant = applicantRepository.save(applicant);
-
-
-            saveQuestionAnswers(request, applicant, project, fileAnswers);
-
-            return new ApplicationResponse(
-                    "Success",
-                    "Application submitted successfully"
-            );
+        return new ApplicationResponse(
+                "Success",
+                "Application submitted successfully"
+        );
     }
 
-    private void saveQuestionAnswers(SubmitApplicationRequest request, Applicant applicant, Project project, Map<Integer, MultipartFile> fileAnswers) {
-        Map<Integer, FormQuestion> questionMap = questionRepository.findByProjectId(project.getProjectId()).stream()
+    private void saveQuestionAnswers(SubmitApplicationRequest request, Integer applicantId, Integer projectId, Map<Integer, MultipartFile> fileAnswers) {
+
+        //TODO only questionId, questionNumber, question and questionType are needed
+        // TODO INDEX ALSO NEEDED
+        Map<Integer, FormQuestion> questionMap = questionRepository.findByProjectIdFormSubmission(projectId).stream()
                 .collect(Collectors.toMap(FormQuestion::getQuestionNumber, q -> q));
 
         // 7. Save question answers
@@ -269,9 +188,10 @@ public class ApplicationService {
                 );
             }
 
+            //TODO Come to this later
             QuestionAnswer  answer = new QuestionAnswer();
             answer.setQuestion(question);
-            answer.setApplicant(applicant);
+            answer.setApplicant(new Applicant(applicantId));
 
             // Handle different question types
             switch (question.getQuestionType()) {
@@ -285,8 +205,8 @@ public class ApplicationService {
                     try {
                         String filePath = fileStorageService.storeFile(
                                 file,
-                                project.getProjectId(),
-                                applicant.getApplicantId(),
+                                projectId,
+                                applicantId,
                                 answerDTO.getQuestionNumber()
                         );
                         answer.setQuestionAnswer(filePath);

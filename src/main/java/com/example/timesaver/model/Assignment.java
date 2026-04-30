@@ -10,7 +10,7 @@ import java.time.ZonedDateTime;
 public class Assignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     private String title;
     private String description;

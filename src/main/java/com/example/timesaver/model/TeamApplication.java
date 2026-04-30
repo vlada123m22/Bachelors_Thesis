@@ -10,7 +10,7 @@ import java.time.ZonedDateTime;
 @Data
 public class TeamApplication {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer teamApplicationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)

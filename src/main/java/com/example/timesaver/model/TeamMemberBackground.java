@@ -7,8 +7,9 @@ import lombok.Data;
 @Table(name = "team_member_backgrounds")
 @Data
 public class TeamMemberBackground {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)

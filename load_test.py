@@ -32,23 +32,6 @@ class TimeSaverBaseUser(HttpUser):
         self.email = f"{self.username}@example.com"
         logger.info(f"Starting user: {self.username} with role: {self.role}")
 
-        # Check backend connectivity first
-        try:
-            with self.client.get("/auth/signup", catch_response=True) as response:
-                if response.status_code == 0:
-                    logger.error("=" * 80)
-                    logger.error("CRITICAL ERROR: Cannot connect to backend server!")
-                    logger.error(f"Host: {self.host}")
-                    logger.error("Please ensure:")
-                    logger.error("1. Backend server is running")
-                    logger.error("2. Server is accessible at the configured host")
-                    logger.error("3. No firewall is blocking the connection")
-                    logger.error("=" * 80)
-                    raise StopUser()
-        except Exception as e:
-            logger.error(f"Connection check failed: {e}")
-            raise StopUser()
-
         self._signup_and_login()
 
     def _signup_and_login(self):
@@ -75,16 +58,6 @@ class TimeSaverBaseUser(HttpUser):
             if response.status_code in [200, 201]:
                 response.success()
                 logger.info(f"✓ Signup successful for {self.username}")
-            elif response.status_code == 409:
-                response.success()
-                logger.info(f"✓ User {self.username} already exists (409) - will try login")
-            elif response.status_code in [400, 500]:
-                response.success()  # Don't fail the test, just log and continue to login
-                logger.warning(f"⚠ Signup got {response.status_code} for {self.username} - continuing to login")
-                logger.warning(f"Response: {response.text[:300]}")
-            else:
-                response.success()  # Mark as success to not affect statistics
-                logger.warning(f"⚠ Signup unexpected status {response.status_code} - {response.text[:200]}")
 
         # Login
         login_payload = {
@@ -100,7 +73,7 @@ class TimeSaverBaseUser(HttpUser):
                 raise StopUser()
 
             logger.info(f"Login response: {response.status_code} - {response.text[:500]}")
-            if response.status_code == 200:
+            if response.status_code in [200,201]:
                 try:
                     data = response.json()
                     logger.info(f"Login response JSON keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}")
@@ -122,15 +95,6 @@ class TimeSaverBaseUser(HttpUser):
                     response.success()  # Don't fail test
                     logger.error(f"✗ Login JSON parse error: {e} - Response: {response.text}")
                     self.token = None
-            elif response.status_code == 401:
-                response.success()  # Don't fail test - user might not exist
-                logger.warning(f"⚠ Login failed (401) for {self.username} - user might not exist")
-                self.token = None
-            else:
-                response.success()  # Don't fail test
-                logger.warning(f"⚠ Login got status {response.status_code} for {self.username}")
-                logger.warning(f"Response: {response.text[:300]}")
-                self.token = None
 
     @property
     def headers(self):
@@ -223,47 +187,31 @@ class OrganizerUser(TimeSaverBaseUser):
 
         # Get Project Details
         logger.info(f"[{self.username}] Getting project details for ID={project_id}")
-        with self.client.get(f"/projects/{project_id}", headers={"X-Timezone": "UTC"}, catch_response=True, name="/projects/{id}") as resp:
+        with self.client.get(f"/projects/{project_id}", headers={"X-Timezone": "UTC"}, catch_response=True, name="/projects/{projectId} [get]") as resp:
             logger.info(f"[{self.username}] Get project response: {resp.status_code}")
-            if resp.status_code == 200:
+            if resp.status_code in [200, 201]:
                 resp.success()
                 logger.info(f"✓ [{self.username}] Got project details")
-            elif resp.status_code in [401, 403]:
-                resp.success()  # Auth issue, not a test failure
-            else:
-                resp.failure(f"Failed: {resp.status_code}")
-                logger.error(f"✗ [{self.username}] Get project failed: {resp.text[:200]}")
 
         # List My Projects
         logger.info(f"[{self.username}] Listing my projects")
         with self.client.get("/projects", headers=self.headers, catch_response=True, name="/projects [list]") as resp:
             logger.info(f"[{self.username}] List projects response: {resp.status_code}")
-            if resp.status_code == 200:
+            if resp.status_code in [200, 201]:
                 resp.success()
                 logger.info(f"✓ [{self.username}] Listed projects")
-            elif resp.status_code in [401, 403]:
-                resp.success()
-            else:
-                resp.failure(f"Failed: {resp.status_code}")
-                logger.error(f"✗ [{self.username}] List projects failed: {resp.text[:200]}")
 
         # Get Schedule
         logger.info(f"[{self.username}] Getting schedule for day 1")
-        with self.client.get(f"/projects/{project_id}/schedule/1", headers=self.headers, catch_response=True, name="/projects/{id}/schedule/{day}") as resp:
+        with self.client.get(f"/projects/{project_id}/schedule/1", headers=self.headers, catch_response=True, name="/projects/{projectId}/schedule/{day} [get]") as resp:
             logger.info(f"[{self.username}] Get schedule response: {resp.status_code}")
-            if resp.status_code == 200:
-                resp.success()
-            elif resp.status_code in [401, 403, 404]:
-                resp.success()  # Schedule might not exist or auth issue
-            else:
+            if resp.status_code in [200, 201]:
                 resp.success()
 
         # Get Schedule for Day 2
-        with self.client.get(f"/projects/{project_id}/schedule/2", headers=self.headers, catch_response=True, name="/projects/{id}/schedule/{day}") as resp:
+        with self.client.get(f"/projects/{project_id}/schedule/2", headers=self.headers, catch_response=True, name="/projects/{projectId}/schedule/{day} [get]") as resp:
             logger.info(f"[{self.username}] Get schedule day 2 response: {resp.status_code}")
-            if resp.status_code in [200, 401, 403, 404]:
-                resp.success()
-            else:
+            if resp.status_code in [200, 201]:
                 resp.success()
 
         # Edit Project
@@ -274,7 +222,7 @@ class OrganizerUser(TimeSaverBaseUser):
                 {
                     "questionNumber": 1,
                     "questionType": "TEXT",
-                    "question": "What is your updated experience?"
+                    "question": "What is your experience level?"
                 }
             ]
         }
@@ -282,14 +230,9 @@ class OrganizerUser(TimeSaverBaseUser):
         logger.info(f"[{self.username}] Editing project ID={project_id}")
         with self.client.put("/projects", json=edit_payload, headers=self.headers, catch_response=True, name="/projects [edit]") as resp:
             logger.info(f"[{self.username}] Edit project response: {resp.status_code}")
-            if resp.status_code == 200:
+            if resp.status_code in [200, 201]:
                 resp.success()
                 logger.info(f"✓ [{self.username}] Project edited")
-            elif resp.status_code in [401, 403]:
-                resp.success()
-            else:
-                resp.failure(f"Failed: {resp.status_code}")
-                logger.error(f"✗ [{self.username}] Edit project failed: {resp.text[:200]}")
 
     @task(2)
     def manage_applicants(self):
@@ -301,9 +244,9 @@ class OrganizerUser(TimeSaverBaseUser):
         logger.info(f"[{self.username}] Managing applicants for project {project_id}")
 
         # View participants
-        with self.client.get(f"/{project_id}/participants", headers=self.headers, catch_response=True, name="/{projectId}/participants") as resp:
+        with self.client.get(f"/{project_id}/participants", headers=self.headers, catch_response=True, name="/{projectId}/participants [get]") as resp:
             logger.info(f"[{self.username}] Get participants response: {resp.status_code}")
-            if resp.status_code == 200:
+            if resp.status_code in [200, 201]:
                 resp.success()
                 try:
                     data = resp.json()
@@ -331,7 +274,7 @@ class OrganizerUser(TimeSaverBaseUser):
                                                 json=selection_payload,
                                                 headers=self.headers,
                                                 catch_response=True,
-                                                name="/{projectId}/applicants/{id}/selection") as sel_resp:
+                                                name="/{projectId}/applicants/{id}/selection [single]") as sel_resp:
                                 logger.info(f"[{self.username}] Update selection response: {sel_resp.status_code}")
                                 if sel_resp.status_code == 200:
                                     sel_resp.success()
@@ -365,17 +308,11 @@ class OrganizerUser(TimeSaverBaseUser):
                                         bulk_resp.success()
                 except Exception as e:
                     logger.error(f"✗ [{self.username}] Error processing participants: {e}")
-            elif resp.status_code in [401, 403]:
-                resp.success()  # Auth issue
-            else:
-                resp.success()
 
         # View teams
-        with self.client.get(f"/{project_id}/teams", headers=self.headers, catch_response=True, name="/{projectId}/teams") as resp:
+        with self.client.get(f"/{project_id}/teams", headers=self.headers, catch_response=True, name="/{projectId}/teams [get]") as resp:
             logger.info(f"[{self.username}] Get teams response: {resp.status_code}")
-            if resp.status_code in [200, 401, 403, 404]:
-                resp.success()
-            else:
+            if resp.status_code in [200, 201]:
                 resp.success()
 
     @task(2)
@@ -392,11 +329,6 @@ class OrganizerUser(TimeSaverBaseUser):
             if resp.status_code in [200, 201]:
                 resp.success()
                 logger.info(f"✓ [{self.username}] Teams created")
-            elif resp.status_code in [401, 403]:
-                resp.success()  # Auth issue
-            else:
-                resp.success()  # Might fail if no applicants selected
-                logger.warning(f"[{self.username}] Create teams status: {resp.status_code}")
 
     @task(1)
     def delete_project(self):
@@ -407,18 +339,14 @@ class OrganizerUser(TimeSaverBaseUser):
 
             with self.client.delete(f"/projects/{project_id}", headers=self.headers, catch_response=True, name="/projects/{id} [delete]") as resp:
                 logger.info(f"[{self.username}] Delete project response: {resp.status_code}")
-                if resp.status_code == 200:
+                if resp.status_code in [200, 201]:
                     resp.success()
                     logger.info(f"✓ [{self.username}] Project deleted")
-                elif resp.status_code in [401, 403]:
-                    resp.success()  # Auth issue
-                else:
-                    resp.success()
 
 
 class ParticipantUser(TimeSaverBaseUser):
     role = "participant"
-    weight = 4
+    weight = 9
     applied_projects = []
     my_team_ids = []
 
@@ -434,9 +362,9 @@ class ParticipantUser(TimeSaverBaseUser):
         logger.info(f"[{self.username}] Applying to project {project_id}")
 
         # Get form
-        with self.client.get(f"/projects/apply/{project_id}", catch_response=True, name="/projects/apply/{id} [get form]") as resp:
+        with self.client.get(f"/projects/apply/{project_id}", catch_response=True, name="/projects/apply/{id} [form]") as resp:
             logger.info(f"[{self.username}] Get form response: {resp.status_code}")
-            if resp.status_code == 200:
+            if resp.status_code in [200, 201]:
                 resp.success()
 
                 # Submit application
@@ -450,7 +378,7 @@ class ParticipantUser(TimeSaverBaseUser):
                         {
                             "questionNumber": 1,
                             "questionType": "TEXT",
-                            "question": "Experience?",
+                            "question": "What is your experience level?",
                             "answer": "I have 5 years of experience in software development"
                         }
                     ],
@@ -481,13 +409,14 @@ class ParticipantUser(TimeSaverBaseUser):
                     elif post_resp.status_code == 409:
                         post_resp.success()
                         logger.info(f"[{self.username}] Already applied (409)")
-                    elif post_resp.status_code in [401, 403]:
-                        logger.warning(f"[{self.username}] Application auth error: {post_resp.status_code}")
-                    else:
-                        post_resp.success()  # Mark as success to avoid false failures
-                        logger.warning(f"[{self.username}] Application status: {post_resp.status_code}")
+#                     elif post_resp.status_code in [401, 403]:
+#                         logger.warning(f"[{self.username}] Application auth error: {post_resp.status_code}")
+#                     else:
+#                         post_resp.success()  # Mark as success to avoid false failures
+#                         logger.warning(f"[{self.username}] Application status: {post_resp.status_code}")
             else:
-                resp.success()  # Project might not exist yet
+                logger.error({resp.text[:300]})
+
 
     @task(3)
     def teams_flow_list_and_create(self):
@@ -498,49 +427,48 @@ class ParticipantUser(TimeSaverBaseUser):
         project_id = random.choice(self.applied_projects)
         logger.info(f"[{self.username}] Listing teams for project {project_id}")
 
-        # List teams
-        with self.client.get(f"/api/teams-flow/projects/{project_id}/teams",
-                           catch_response=True,
-                           name="/api/teams-flow/projects/{id}/teams") as resp:
-            logger.info(f"[{self.username}] List teams response: {resp.status_code}")
-            if resp.status_code == 200:
-                try:
-                    teams = resp.json()
-                    logger.info(f"[{self.username}] Found {len(teams) if isinstance(teams, list) else 0} teams")
-                    if isinstance(teams, list):
-                        for team in teams:
-                            team_id = team.get("teamId")
-                            if team_id and team_id not in shared_team_ids:
-                                shared_team_ids.append(team_id)
-                    resp.success()
-                except Exception as e:
-                    resp.success()
-                    logger.error(f"✗ [{self.username}] Error parsing teams: {e}")
-            else:
-                resp.success()
+        # # List teams
+        # with self.client.get(f"/api/teams-flow/projects/{project_id}/teams",
+        #                    catch_response=True,
+        #                    name="/api/teams-flow/projects/{id}/teams [list]") as resp:
+        #     logger.info(f"[{self.username}] List teams response: {resp.status_code}")
+        #     if resp.status_code in [200, 201]:
+        #         try:
+        #             teams = resp.json()
+        #             logger.info(f"[{self.username}] Found {len(teams) if isinstance(teams, list) else 0} teams")
+        #             if isinstance(teams, list):
+        #                 for team in teams:
+        #                     team_id = team.get("teamId")
+        #                     if team_id and team_id not in shared_team_ids:
+        #                         shared_team_ids.append(team_id)
+        #             resp.success()
+        #         except Exception as e:
+        #             resp.success()
+        #             logger.error(f"✗ [{self.username}] Error parsing teams: {e}")
+        #     else:
+        #         logger.error(f"Teams Retrieval Failed [{resp.text}]")
+        #
 
-        # Create a manual team
-        team_payload = {
-            "projectId": project_id,
-            "ideaTitle": f"Innovative_Idea_{uuid.uuid4().hex[:5]}",
-            "roles": [{"code": "Dev", "min": 1, "max": 3}]
-        }
-
-        logger.info(f"[{self.username}] Creating team for project {project_id}")
-        with self.client.post(f"/api/teams-flow/projects/{project_id}/teams",
-                            json=team_payload,
-                            headers=self.headers,
-                            catch_response=True,
-                            name="/api/teams-flow/projects/{id}/teams [create]") as resp:
-            logger.info(f"[{self.username}] Create team response: {resp.status_code}")
-            logger.info(f"[{self.username}] Response: {resp.text[:200]}")
-
-            if resp.status_code in [200, 201]:
-                resp.success()
-                logger.info(f"✓ [{self.username}] Team created")
-            else:
-                resp.success()  # Might fail if not accepted yet
-                logger.warning(f"[{self.username}] Create team status: {resp.status_code}")
+        #
+        # # Create a manual team
+        # team_payload = {
+        #     "projectId": project_id,
+        #     "ideaTitle": f"Innovative_Idea_{uuid.uuid4().hex[:5]}",
+        #     "roles": [{"code": "Dev", "min": 1, "max": 3}]
+        # }
+        #
+        # logger.info(f"[{self.username}] Creating team for project {project_id}")
+        # with self.client.post(f"/api/teams-flow/projects/{project_id}/teams",
+        #                     json=team_payload,
+        #                     headers=self.headers,
+        #                     catch_response=True,
+        #                     name="/api/teams-flow/projects/{id}/teams [create]") as resp:
+        #     logger.info(f"[{self.username}] Create team response: {resp.status_code}")
+        #     logger.info(f"[{self.username}] Response: {resp.text[:200]}")
+        #
+        #     if resp.status_code in [200, 201]:
+        #         resp.success()
+        #         logger.info(f"✓ [{self.username}] Team created")
 
     @task(2)
     def teams_flow_interactions(self):
@@ -560,10 +488,6 @@ class ParticipantUser(TimeSaverBaseUser):
             if resp.status_code in [200, 201]:
                 resp.success()
                 logger.info(f"✓ [{self.username}] Applied to team")
-            elif resp.status_code in [400, 409]:
-                resp.success()  # Already applied or invalid state
-            else:
-                resp.success()
 
         # View team applications (only team creator/leader can see)
         with self.client.get(f"/api/teams-flow/teams/{team_id}/applications",
@@ -601,10 +525,6 @@ class ParticipantUser(TimeSaverBaseUser):
                 except Exception as e:
                     resp.success()
                     logger.error(f"✗ [{self.username}] Error processing applications: {e}")
-            elif resp.status_code == 403:
-                resp.success()  # Not team leader
-            else:
-                resp.success()
 
     @task(1)
     def team_member_operations(self):
@@ -622,11 +542,7 @@ class ParticipantUser(TimeSaverBaseUser):
                               catch_response=True,
                               name="/api/teams-flow/teams/{id}/members/{memberId} [kick]") as resp:
             logger.info(f"[{self.username}] Kick member response: {resp.status_code}")
-            if resp.status_code == 200:
-                resp.success()
-            elif resp.status_code in [403, 404]:
-                resp.success()  # Not authorized or member doesn't exist
-            else:
+            if resp.status_code in [200, 201]:
                 resp.success()
 
         # Try to leave team
@@ -636,51 +552,8 @@ class ParticipantUser(TimeSaverBaseUser):
                             catch_response=True,
                             name="/api/teams-flow/teams/{id}/members/{memberId}/leave") as resp:
             logger.info(f"[{self.username}] Leave team response: {resp.status_code}")
-            if resp.status_code == 200:
+            if resp.status_code in [200, 201]:
                 resp.success()
-            elif resp.status_code in [400, 403, 404]:
-                resp.success()  # Not a member or invalid operation
-            else:
-                resp.success()
-
-
-# class AdminUser(TimeSaverBaseUser):
-#     role = "admin"
-#
-#     @task(3)
-#     def manage_projects(self):
-#         """Admins can view and delete projects"""
-#         if not shared_project_ids:
-#             return
-#
-#         project_id = random.choice(shared_project_ids)
-#         logger.info(f"[{self.username}] Admin viewing project {project_id}")
-#
-#         # Get project details
-#         with self.client.get(f"/projects/{project_id}", headers={"X-Timezone": "UTC"}, catch_response=True, name="/projects/{id}") as resp:
-#             logger.info(f"[{self.username}] Get project response: {resp.status_code}")
-#             if resp.status_code in [200, 401, 403, 404]:
-#                 resp.success()
-#             else:
-#                 resp.success()
-#
-#         # List all projects
-#         with self.client.get("/projects", headers=self.headers, catch_response=True, name="/projects [list]") as resp:
-#             logger.info(f"[{self.username}] List projects response: {resp.status_code}")
-#             if resp.status_code in [200, 401, 403]:
-#                 resp.success()
-#             else:
-#                 resp.success()
-#
-#         # Occasionally delete a project
-#         if random.random() < 0.1:
-#             logger.info(f"[{self.username}] Admin deleting project {project_id}")
-#             with self.client.delete(f"/projects/{project_id}", headers=self.headers, catch_response=True, name="/projects/{id} [delete]") as resp:
-#                 logger.info(f"[{self.username}] Delete response: {resp.status_code}")
-#                 if resp.status_code in [200, 401, 403, 404]:
-#                     resp.success()
-#                 else:
-#                     resp.success()
 
 
 # Event listeners for additional logging
@@ -691,34 +564,6 @@ def on_test_start(environment, **kwargs):
     logger.info(f"Target host: {environment.host}")
     logger.info("=" * 80)
 
-    # Check backend connectivity
-    import requests
-    try:
-        logger.info("Checking backend connectivity...")
-        response = requests.get(f"{environment.host}/auth/signup", timeout=5000)
-        logger.info(f"✓ Backend is reachable! Status: {response.status_code}")
-        global backend_available
-        backend_available = True
-    except requests.exceptions.ConnectionError:
-        logger.error("=" * 80)
-        logger.error("✗ CRITICAL: Cannot connect to backend server!")
-        logger.error(f"Host: {environment.host}")
-        logger.error("")
-        logger.error("Please check:")
-        logger.error("1. Is your Spring Boot backend running?")
-        logger.error("2. Is it running on the correct port (8081)?")
-        logger.error("3. Check with: curl http://localhost:8081/auth/signup")
-        logger.error("")
-        logger.error("To start your backend:")
-        logger.error("  cd to your project directory")
-        logger.error("  ./mvnw spring-boot:run")
-        logger.error("  OR")
-        logger.error("  Run from your IDE (IntelliJ/Eclipse)")
-        logger.error("=" * 80)
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Connectivity check failed: {e}")
-        sys.exit(1)
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
@@ -728,5 +573,5 @@ def on_test_stop(environment, **kwargs):
     logger.info(f"Total shared teams created: {len(shared_team_ids)}")
     logger.info("=" * 80)
 
-# To run: locust -f load_test.py --host http://localhost:8081
+# To run: locust -f load_test.py --host http://localhost:8081 --web-port 8090
 # Note: Backend is running in Docker on port 8081

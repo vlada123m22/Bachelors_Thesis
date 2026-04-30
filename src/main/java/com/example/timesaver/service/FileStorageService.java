@@ -22,7 +22,7 @@ public class FileStorageService {
     /**
      * Store file and return the file path
      */
-    public String storeFile(MultipartFile file, Long projectId, Long applicantId, Integer questionNumber)
+    public String storeFile(MultipartFile file, Integer projectId, Integer applicantId, Integer questionNumber)
             throws IOException {
 
         if (file == null || file.isEmpty()) {
@@ -30,9 +30,9 @@ public class FileStorageService {
         }
 
         // Validate file size (e.g., max 10MB)
-        long maxFileSize = 10 * 1024 * 1024; // 10MB
+        long maxFileSize = 100 * 1024 * 1024; // 10MB
         if (file.getSize() > maxFileSize) {
-            throw new IOException("File size exceeds maximum limit of 10MB");
+            throw new IOException("File size exceeds maximum limit of 100MB");
         }
 
         // Create directory structure: uploadDirectory/projectId/applicantId/

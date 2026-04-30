@@ -27,10 +27,13 @@ public class AuthenticationService {
 
     private final JwtService jwtService;
 
-    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder encoder, JwtService jwtService) {
+    private final UserService userService;
+
+    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder encoder, JwtService jwtService, UserService userService) {
         this.userRepository = userRepository;
         this.encoder = encoder;
         this.jwtService = jwtService;
+        this.userService = userService;
     }
 
     public SignUpResponse registerOrganizer(SignUpRequest request) {
@@ -39,9 +42,9 @@ public class AuthenticationService {
                     "The username already exists. Please choose another username");
         }
 
-        if(userRepository.findUserByEmail(request.getEmail()).isPresent())
-            return new SignUpResponse(false,
-                    "The email already exists. Please choose another email");
+//        if(userRepository.findUserByEmail(request.getEmail()).isPresent())
+//            return new SignUpResponse(false,
+//                    "The email already exists. Please choose another email");
 
         User user = new User();
         user.setUserName(request.getUserName());
@@ -61,9 +64,9 @@ public class AuthenticationService {
                     "The username already exists. Please choose another username");
         }
 
-        if(userRepository.findUserByEmail(request.getEmail()).isPresent())
-            return new SignUpResponse(false,
-                    "The email already exists. Please choose another email");
+//        if(userRepository.findUserByEmail(request.getEmail()).isPresent())
+//            return new SignUpResponse(false,
+//                    "The email already exists. Please choose another email");
         User user = new User();
         user.setUserName(request.getUserName());
         user.setPassword(encoder.encode(request.getPassword()));
@@ -118,9 +121,9 @@ public class AuthenticationService {
         if (userRepository.findByUserName(request.getUserName()).isPresent()) {
             return new SignUpResponse(false, "The username already exists. Please choose another username");
         }
-        if (userRepository.findUserByEmail(request.getEmail()).isPresent()) {
-            return new SignUpResponse(false, "The email already exists. Please choose another email");
-        }
+//        if (userRepository.findUserByEmail(request.getEmail()).isPresent()) {
+//            return new SignUpResponse(false, "The email already exists. Please choose another email");
+//        }
 
         User user = new User();
         user.setUserName(request.getUserName());
@@ -131,5 +134,30 @@ public class AuthenticationService {
 
         userRepository.save(user);
         return new SignUpResponse(true, null);
+    }
+
+    public ResponseEntity<String> changePassword(String userName, String oldPassword, String newPassword) {
+        Optional<User> userOpt = userRepository.findByUserName(userName);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        User user = userOpt.get();
+        if (!encoder.matches(oldPassword, user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect old password");
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Password changed successfully");
+    }
+
+    public void deleteParticipantProfile(String userName) {
+        userService.deleteParticipantProfile(userName);
+    }
+
+    public void deleteOrganizerProfile(String userName) {
+        userService.deleteOrganizerProfile(userName);
     }
 }

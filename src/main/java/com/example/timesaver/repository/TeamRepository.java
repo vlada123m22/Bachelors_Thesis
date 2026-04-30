@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 
-public interface TeamRepository extends JpaRepository<Team, Long> {
+public interface TeamRepository extends JpaRepository<Team, Integer> {
 
     Optional<Team> findByTeamNameAndProject(String teamName, Project project);
 
@@ -22,13 +22,13 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
             @Param("project") Project project
     );
 
-    @Query("SELECT new com.example.timesaver.model.dto.team.TeamNrMembers(a.team, COUNT(a.applicantId)) " +
+    @Query("SELECT new com.example.timesaver.model.dto.team.TeamNrMembers(a.team, CAST(COUNT(a.applicantId) AS integer)) " +
             "FROM Applicant a " +
             "WHERE a.project.projectId = :projectId " +
             "GROUP BY a.team " +
             "HAVING COUNT(a.applicantId) < :minParticipants ")
     List<TeamNrMembers> incompleteTeamsByProject(
-            @Param("projectId") Long projectId,
+            @Param("projectId") Integer projectId,
             @Param("minParticipants") Integer minParticipants
     );
 
@@ -36,7 +36,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
             "FROM Team t " +
             "WHERE t.project.projectId = :projectId ")
     List<Team> findAllTeamsByProject(
-            @Param("projectId") Long projectId
+            @Param("projectId") Integer projectId
     );
 
 

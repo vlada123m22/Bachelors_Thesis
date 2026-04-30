@@ -13,7 +13,7 @@ import java.util.List;
 public class EditProjectRequest {
 
     @NotNull(message = "Project ID is required")
-    private Long projectId;
+    private Integer projectId;
 
     @NotBlank(message = "Project name is required")
     @Size(min = 3, max = 200, message = "Project name must be between 3 and 200 characters")

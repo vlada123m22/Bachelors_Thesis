@@ -64,7 +64,7 @@ public class TeamsFlowControllerTest {
         when(userRepository.findByUserName(username)).thenReturn(Optional.of(user));
     }
 
-    private void mockProjectAndApplicant(Long projectId, Long applicantId) {
+    private void mockProjectAndApplicant(Long projectId, Integer applicantId) {
         Project project = new Project();
         project.setProjectId(projectId);
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));

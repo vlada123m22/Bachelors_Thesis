@@ -171,7 +171,7 @@ public class ModelAndDtoTest {
 
         // TeamMember, TeamRoleRequirement, etc.
         TeamMember tm = new TeamMember();
-        tm.setId(1L);
+        tm.setTeamMemberId(1L);
         tm.setTeam(team);
         tm.setApplicant(applicant);
         tm.onCreate();
@@ -258,7 +258,7 @@ public class ModelAndDtoTest {
         ApplicationResponse ar2 = new ApplicationResponse("S", "M", true);
         assertTrue(ar2.getTeamExists());
 
-        GetFormResponse gfr = new GetFormResponse(Collections.emptyList());
+        GetFormResponse gfr = new GetFormResponse(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         assertNotNull(gfr.getFormQuestions());
 
         SubmitApplicationRequest sar = new SubmitApplicationRequest();
@@ -403,8 +403,8 @@ public class ModelAndDtoTest {
         assertEquals(sub1, sub2);
         assertEquals(sub1.hashCode(), sub2.hashCode());
 
-        TeamMember tm1 = new TeamMember(); tm1.setId(1L);
-        TeamMember tm2 = new TeamMember(); tm2.setId(1L);
+        TeamMember tm1 = new TeamMember(); tm1.setTeamMemberId(1L);
+        TeamMember tm2 = new TeamMember(); tm2.setTeamMemberId(1L);
         assertEquals(tm1, tm2);
         assertEquals(tm1.hashCode(), tm2.hashCode());
 
@@ -469,7 +469,7 @@ public class ModelAndDtoTest {
         ApplicationResponse ar2 = new ApplicationResponse("S", "M", true);
         assertTrue(ar2.getTeamExists());
 
-        GetFormResponse gfr = new GetFormResponse(Collections.emptyList());
+        GetFormResponse gfr = new GetFormResponse(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         assertEquals(0, gfr.getFormQuestions().size());
 
         GetProjectResponse gpr = new GetProjectResponse(1L, "P", "D", null, null, 10, 1, Collections.emptyList());

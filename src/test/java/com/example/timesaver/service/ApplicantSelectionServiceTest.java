@@ -44,7 +44,7 @@ public class ApplicantSelectionServiceTest {
         SecurityContextHolder.setContext(securityContext);
     }
 
-    private void mockUser(String username, Long userId) {
+    private void mockUser(String username, Integer userId) {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);

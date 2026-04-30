@@ -2,6 +2,7 @@ package com.example.timesaver.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
@@ -12,12 +13,13 @@ import java.util.List;
 @Entity
 @Table(name = "projects")
 @Data
+@NoArgsConstructor
 public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "project_id")
-    private Long projectId;
+    private Integer projectId;
 
     @Column(nullable = false, name = "project_name")
     private String projectName;
@@ -67,6 +69,11 @@ public class Project {
     @Column(name = "background_question_text", length = 500)
     private String backgroundQuestionText = "What is your background?";
 
+
+    public Project(String backgroundOptions, String rolesOptions) {
+        this.backgroundOptions = backgroundOptions;
+        this.rolesOptions = rolesOptions;
+    }
 
     @PrePersist
     protected void onCreate() {

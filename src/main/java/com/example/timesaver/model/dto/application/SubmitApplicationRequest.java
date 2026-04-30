@@ -12,7 +12,7 @@ import java.util.List;
 public class SubmitApplicationRequest {
 
     @NotNull(message = "Project ID is required")
-    private Long projectId;
+    private Integer projectId;
     private List<String> roles;      // selections from organizer options
     private List<String> background; // selections from organizer options
 

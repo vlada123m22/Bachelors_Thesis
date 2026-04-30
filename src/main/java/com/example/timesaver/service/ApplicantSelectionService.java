@@ -32,7 +32,7 @@ public class ApplicantSelectionService {
         return userRepository.findByUserName(username).orElse(null);
     }
 
-    private Project requireOrganizerOfProject(Long projectId) {
+    private Project requireOrganizerOfProject(Integer projectId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
         User user = getCurrentUser();
@@ -43,7 +43,7 @@ public class ApplicantSelectionService {
     }
 
     @Transactional
-    public void setApplicantSelection(Long projectId, Long applicantId, boolean selected) {
+    public void setApplicantSelection(Integer projectId, Integer applicantId, boolean selected) {
         Project project = requireOrganizerOfProject(projectId);
         Applicant applicant = applicantRepository.findById(applicantId)
                 .orElseThrow(() -> new IllegalArgumentException("Applicant not found"));
@@ -55,7 +55,7 @@ public class ApplicantSelectionService {
     }
 
     @Transactional
-    public int bulkSetSelection(Long projectId, List<Long> applicantIds, boolean selected) {
+    public int bulkSetSelection(Integer projectId, List<Integer> applicantIds, boolean selected) {
         requireOrganizerOfProject(projectId);
         List<Applicant> toUpdate = applicantRepository.findAllById(applicantIds);
         // ensure all belong to the same project

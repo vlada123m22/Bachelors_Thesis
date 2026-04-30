@@ -9,14 +9,14 @@ import java.util.List;
 public class ProjectResponse {
     private final String status;
     private final String message;
-    private Long projectId;
+    private Integer projectId;
 
     private List<String> roleOptions;
     private List<String> backgroundOptions;
     private String rolesQuestionText;
     private String backgroundQuestionText;
 
-    public ProjectResponse(String status, String message, Long projectId) {
+    public ProjectResponse(String status, String message, Integer projectId) {
         this.status = status;
         this.message = message;
         this.projectId = projectId;

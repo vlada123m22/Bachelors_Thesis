@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="vlada" runOnChange="true" id="save_applicant">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Function: save_applicant</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="false" path="Functions/save_applicant.sql"/>
+    </changeSet>
+
+    <changeSet author="vlada" runOnChange="true" id="delete_project">
+        <validCheckSum>ANY</validCheckSum>
+        <comment>(DDL) add Function: delete_project</comment>
+        <sqlFile relativeToChangelogFile="true" endDelimiter=";" splitStatements="false" path="Functions/delete_project.sql"/>
+    </changeSet>
+
+</databaseChangeLog>

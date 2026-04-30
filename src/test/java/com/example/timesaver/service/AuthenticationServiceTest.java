@@ -42,10 +42,8 @@ public class AuthenticationServiceTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        req.setEmail("email@test.com");
         
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-        when(userRepository.findUserByEmail("email@test.com")).thenReturn(Optional.empty());
         when(encoder.encode("pass")).thenReturn("encoded");
 
         SignUpResponse resp = authenticationService.registerOrganizer(req);
@@ -72,10 +70,8 @@ public class AuthenticationServiceTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        req.setEmail("email@test.com");
         
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-        when(userRepository.findUserByEmail("email@test.com")).thenReturn(Optional.empty());
 
         SignUpResponse resp = authenticationService.registerParticipant(req);
         assertTrue(resp.isCreated());
@@ -98,10 +94,8 @@ public class AuthenticationServiceTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        req.setEmail("email@test.com");
         
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-        when(userRepository.findUserByEmail("email@test.com")).thenReturn(Optional.empty());
 
         SignUpResponse resp = authenticationService.registerMentor(req);
         assertTrue(resp.isCreated());
@@ -159,20 +153,20 @@ public class AuthenticationServiceTest {
         assertEquals("Incorrect password", resp.getBody().getErrorMessage());
     }
 
-    @Test
-    public void testRegisterOrganizerDuplicateEmail() {
-        SignUpRequest req = new SignUpRequest();
-        req.setUserName("user");
-        req.setEmail("duplicate@test.com");
-
-        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
-
-        SignUpResponse resp = authenticationService.registerOrganizer(req);
-
-        assertFalse(resp.isCreated());
-        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
-    }
+//    @Test
+//    public void testRegisterOrganizerDuplicateEmail() {
+//        SignUpRequest req = new SignUpRequest();
+//        req.setUserName("user");
+//        req.setEmail("duplicate@test.com");
+//
+//        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
+//        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
+//
+//        SignUpResponse resp = authenticationService.registerOrganizer(req);
+//
+//        assertFalse(resp.isCreated());
+//        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
+//    }
 
     @Test
     public void testRegisterParticipantDuplicateUsername() {
@@ -187,20 +181,20 @@ public class AuthenticationServiceTest {
         assertEquals("The username already exists. Please choose another username", resp.getErrorMessage());
     }
 
-    @Test
-    public void testRegisterParticipantDuplicateEmail() {
-        SignUpRequest req = new SignUpRequest();
-        req.setUserName("user");
-        req.setEmail("duplicate@test.com");
-
-        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
-
-        SignUpResponse resp = authenticationService.registerParticipant(req);
-
-        assertFalse(resp.isCreated());
-        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
-    }
+//    @Test
+//    public void testRegisterParticipantDuplicateEmail() {
+//        SignUpRequest req = new SignUpRequest();
+//        req.setUserName("user");
+//        req.setEmail("duplicate@test.com");
+//
+//        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
+//        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
+//
+//        SignUpResponse resp = authenticationService.registerParticipant(req);
+//
+//        assertFalse(resp.isCreated());
+//        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
+//    }
 
     @Test
     public void testRegisterAdminDuplicateUsername() {
@@ -228,18 +222,18 @@ public class AuthenticationServiceTest {
         assertEquals("The username already exists. Please choose another username", resp.getErrorMessage());
     }
 
-    @Test
-    public void testRegisterMentorDuplicateEmail() {
-        SignUpRequest req = new SignUpRequest();
-        req.setUserName("user");
-        req.setEmail("duplicate@test.com");
-
-        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
-
-        SignUpResponse resp = authenticationService.registerMentor(req);
-
-        assertFalse(resp.isCreated());
-        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
-    }
+//    @Test
+//    public void testRegisterMentorDuplicateEmail() {
+//        SignUpRequest req = new SignUpRequest();
+//        req.setUserName("user");
+//        req.setEmail("duplicate@test.com");
+//
+//        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
+//        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
+//
+//        SignUpResponse resp = authenticationService.registerMentor(req);
+//
+//        assertFalse(resp.isCreated());
+//        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
+//    }
 }

@@ -52,21 +52,20 @@ public class TeamsFlowController {
         return userRepository.findByUserName(username).orElse(null);
     }
 
-    private Long currentApplicantId(Long projectId) {
+    private Integer currentApplicantId(Integer projectId) {
         User user = getCurrentUser();
         if (user == null) throw new SecurityException("User not authenticated");
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
 
-        Applicant applicant = applicantRepository.findByUserAndProject(user, project)
-                .orElseThrow(() -> new IllegalStateException("User has not applied for this project"));
 
-        return applicant.getApplicantId();
+        return applicantRepository.findIdByUserAndProject(user, project)
+                .orElseThrow(() -> new IllegalStateException("User has not applied for this project"));
     }
 
     @PostMapping("/projects/{projectId}/teams")
-    public ResponseEntity<String> createTeam(@PathVariable Long projectId,
+    public ResponseEntity<String> createTeam(@PathVariable Integer projectId,
                                              @Valid @RequestBody CreateTeamRequest req) {
 
         try {
@@ -80,22 +79,22 @@ public class TeamsFlowController {
     }
 
     @PostMapping("/teams/{teamId}/applications")
-    public ResponseEntity<Void> apply(@PathVariable Long teamId) {
+    public ResponseEntity<Void> apply(@PathVariable Integer teamId) {
         // We need project ID to resolve applicant ID. Let's find project from teamId.
         // Usually, the API should probably have project ID if it follows the pattern.
         // For now, let's find the team to get the project ID.
         // Alternatively, we could update the service to take User instead of applicantId.
-        Long projectId = findProjectIdByTeamId(teamId);
+        Integer projectId = findProjectIdByTeamId(teamId);
         teamApplicationService.applyToTeam(teamId, currentApplicantId(projectId));
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
     @PostMapping("/teams/{teamId}/applications/{appId}/decision")
-    public ResponseEntity<String> decide(@PathVariable Long teamId,
-                                         @PathVariable Long appId,
+    public ResponseEntity<String> decide(@PathVariable Integer teamId,
+                                         @PathVariable Integer appId,
                                          @RequestBody DecisionRequest req) {
         try {
-            Long projectId = findProjectIdByTeamId(teamId);
+            Integer projectId = findProjectIdByTeamId(teamId);
             teamApplicationService.decideApplication(teamId, appId, currentApplicantId(projectId), req);
             return ResponseEntity.status(HttpStatus.CREATED).body(null);
         }catch (Exception e){
@@ -105,33 +104,33 @@ public class TeamsFlowController {
     }
 
     @GetMapping("/teams/{teamId}/applications")
-    public ResponseEntity<List<TeamApplicationDTO>> getTeamApplications(@PathVariable Long teamId) {
-        Long projectId = findProjectIdByTeamId(teamId);
+    public ResponseEntity<List<TeamApplicationDTO>> getTeamApplications(@PathVariable Integer teamId) {
+        Integer projectId = findProjectIdByTeamId(teamId);
         return ResponseEntity.ok(teamApplicationService.getTeamApplications(teamId, currentApplicantId(projectId)));
     }
 
     @DeleteMapping("/teams/{teamId}/members/{memberId}")
-    public ResponseEntity<Void> kick(@PathVariable Long teamId, @PathVariable Long memberId) {
-        Long projectId = findProjectIdByTeamId(teamId);
+    public ResponseEntity<Void> kick(@PathVariable Integer teamId, @PathVariable Integer memberId) {
+        Integer projectId = findProjectIdByTeamId(teamId);
         teamApplicationService.removeMember(teamId, memberId, currentApplicantId(projectId));
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/teams/{teamId}/members/{memberId}/leave")
-    public ResponseEntity<Void> leave(@PathVariable Long teamId, @PathVariable Long memberId) {
-        Long projectId = findProjectIdByTeamId(teamId);
+    public ResponseEntity<Void> leave(@PathVariable Integer teamId, @PathVariable Integer memberId) {
+        Integer projectId = findProjectIdByTeamId(teamId);
         teamApplicationService.leaveTeam(teamId, memberId, currentApplicantId(projectId));
         return ResponseEntity.ok().build();
     }
 
-    private Long findProjectIdByTeamId(Long teamId) {
+    private Integer findProjectIdByTeamId(Integer teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new NoSuchElementException("Team not found"));
         return team.getProject().getProjectId();
     }
 
     @GetMapping("/projects/{projectId}/teams")
-    public ResponseEntity<List<TeamListingDTO>> list(@PathVariable Long projectId) {
+    public ResponseEntity<List<TeamListingDTO>> list(@PathVariable Integer projectId) {
         return ResponseEntity.ok(teamApplicationService.listTeams(projectId));
     }
 

@@ -220,7 +220,7 @@ public class ProjectServiceTest {
 
     @Test
     public void testGetProjectWithNullDates() {
-        Long projectId = 1L;
+        Integer projectId = 1;
         Project project = new Project();
         project.setProjectId(projectId);
         project.setProjectName("Test");
@@ -254,12 +254,12 @@ public class ProjectServiceTest {
 
         User organizer = new User(); organizer.setId(1L);
         Project project = new Project();
-        project.setProjectId(100L);
+        project.setProjectId(100);
         project.setOrganizer(organizer);
 
-        when(projectRepository.findById(100L)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(100)).thenReturn(Optional.of(project));
         when(projectRepository.save(any())).thenReturn(project);
-        when(scheduleRepository.findByProjectProjectId(100L)).thenReturn(Collections.emptyList());
+        when(scheduleRepository.findByProjectProjectId(100)).thenReturn(Collections.emptyList());
 
         ResponseEntity<ProjectResponse> resp = projectService.editProject(req);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
@@ -354,7 +354,7 @@ public class ProjectServiceTest {
 
         ResponseEntity<ProjectResponse> resp = projectService.editProject(req);
         assertEquals(HttpStatus.OK, resp.getStatusCode());
-        verify(questionRepository, times(2)).deleteQuestions(100L);
+        verify(questionRepository, times(2)).deleteQuestions(100);
     }
 
     @Test
@@ -391,12 +391,11 @@ public class ProjectServiceTest {
         mockUser("organizer", 1L);
         User organizer = new User(); organizer.setId(1L);
 
-        Project p1 = new Project();
+        GetProjectResponse p1 = new GetProjectResponse();
         p1.setProjectId(1L);
         p1.setProjectName("Project 1");
-        p1.setOrganizer(organizer);
 
-        when(projectRepository.findByOrganizer(any(User.class))).thenReturn(List.of(p1));
+        when(projectRepository.findMainProjInfoByOrganizer(any(User.class))).thenReturn(List.of(p1));
         when(questionRepository.findByProjectId(1L)).thenReturn(Collections.emptyList());
 
         List<GetProjectResponse> projects = projectService.getAllUserProjects();
@@ -440,7 +439,7 @@ public class ProjectServiceTest {
         project.setOrganizer(organizer);
 
         Applicant applicant = new Applicant();
-        when(applicantRepository.findByUserAndProject(user, project)).thenReturn(Optional.of(applicant));
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.of(applicant.getIsSelected()));
 
         assertTrue(projectService.canUserViewSchedule(project, user));
     }
@@ -456,7 +455,7 @@ public class ProjectServiceTest {
 
         Applicant applicant = new Applicant();
         applicant.setIsSelected(true);
-        when(applicantRepository.findByUserAndProject(user, project)).thenReturn(Optional.of(applicant));
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.of(applicant.getIsSelected()));
 
         assertTrue(projectService.canUserViewSchedule(project, user));
     }
@@ -470,7 +469,8 @@ public class ProjectServiceTest {
         project.setScheduleVisibility(ScheduleVisibility.APPLICANTS);
         project.setOrganizer(organizer);
 
-        when(applicantRepository.findByUserAndProject(user, project)).thenReturn(Optional.empty());
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project))
+                .thenReturn(Optional.empty());
 
         assertFalse(projectService.canUserViewSchedule(project, user));
     }
@@ -486,7 +486,8 @@ public class ProjectServiceTest {
 
         Applicant applicant = new Applicant();
         applicant.setIsSelected(false);
-        when(applicantRepository.findByUserAndProject(user, project)).thenReturn(Optional.of(applicant));
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project))
+                .thenReturn(Optional.of(false));
 
         assertFalse(projectService.canUserViewSchedule(project, user));
     }

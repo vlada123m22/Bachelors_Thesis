@@ -44,7 +44,7 @@ public class ProjectController {
      * Returns project details with all form questions
      */
     @GetMapping("/{projectId}")
-    public ResponseEntity<?> getProject(@PathVariable Long projectId, @RequestHeader("X-Timezone") String userTimezone) {
+    public ResponseEntity<?> getProject(@PathVariable Integer projectId, @RequestHeader("X-Timezone") String userTimezone) {
         try {
             GetProjectResponse response = projectService.getProject(projectId, userTimezone);
             return ResponseEntity.ok(response);
@@ -72,13 +72,16 @@ public class ProjectController {
      */
     @DeleteMapping("/{projectId}")
     @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
-    public ResponseEntity<ProjectResponse> deleteProject(@PathVariable Long projectId) {
+    public ResponseEntity<ProjectResponse> deleteProject(@PathVariable Integer projectId) {
         ProjectResponse response = projectService.deleteProject(projectId);
-
         if ("Success".equals(response.getStatus())) {
             return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } else if (response.getMessage().equals("User not authenticated")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } else if (response.getMessage().equals("Project not found or you don't have permission to delete it")){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } else{
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -100,7 +103,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{projectId}/schedule/{dayNumber}")
-    public ResponseEntity<?> getScheduleForDay(@PathVariable Long projectId, @PathVariable Integer dayNumber) {
+    public ResponseEntity<?> getScheduleForDay(@PathVariable Integer projectId, @PathVariable Integer dayNumber) {
         Project project = projectService.getProjectById(projectId);
         User user = projectService.getCurrentUser();
 
@@ -110,5 +113,17 @@ public class ProjectController {
 
         List<ScheduleDTO> schedule = projectService.getScheduleByDay(projectId, dayNumber);
         return ResponseEntity.ok(schedule);
+    }
+
+    /**
+     * Get dashboard with future projects for participants
+     * GET /projects/dashboard/future
+     * Returns all projects that will take place in the future, ordered by start date
+     */
+    @GetMapping("/dashboard/future")
+    @PreAuthorize("hasAnyRole('PARTICIPANT', 'ADMIN')")
+    public ResponseEntity<List<ProjectDashboardDTO>> getFutureProjects() {
+        List<com.example.timesaver.model.dto.project.ProjectDashboardDTO> projects = projectService.getFutureProjects();
+        return ResponseEntity.ok(projects);
     }
 }

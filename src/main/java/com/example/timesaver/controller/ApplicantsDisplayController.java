@@ -23,7 +23,7 @@ public class ApplicantsDisplayController {
     }
 
     @GetMapping("/teams")
-    public ResponseEntity<GetTeamsDTO> displayTeams(@PathVariable Long projectId){
+    public ResponseEntity<GetTeamsDTO> displayTeams(@PathVariable Integer projectId){
         ResponseEntity<GetTeamsDTO> response = null;
         try{
             response =  new ResponseEntity<>(applicantsDisplayService.getTeams(projectId), HttpStatus.OK);
@@ -36,7 +36,7 @@ public class ApplicantsDisplayController {
     }
 
     @GetMapping("/participants")
-    public ResponseEntity<GetParticipantsDTO> displayApplicants(@PathVariable Long projectId){
+    public ResponseEntity<GetParticipantsDTO> displayApplicants(@PathVariable Integer projectId){
         ResponseEntity<GetParticipantsDTO> response = null;
         try {
             response=  new ResponseEntity<>(applicantsDisplayService.getParticipants(projectId), HttpStatus.OK);
@@ -49,8 +49,8 @@ public class ApplicantsDisplayController {
 
     @PatchMapping("/applicants/{applicantId}/selection")
     public ResponseEntity<UpdateSelectionResponse> updateSelection(
-            @PathVariable Long projectId,
-            @PathVariable Long applicantId,
+            @PathVariable Integer projectId,
+            @PathVariable Integer applicantId,
             @RequestBody UpdateSelectionRequest request
     ) {
         try {
@@ -73,7 +73,7 @@ public class ApplicantsDisplayController {
 
     @PatchMapping("/applicants/selection")
     public ResponseEntity<UpdateSelectionResponse> bulkUpdateSelection(
-            @PathVariable Long projectId,
+            @PathVariable Integer projectId,
             @RequestBody BulkUpdateSelectionRequest request
     ) {
         try {

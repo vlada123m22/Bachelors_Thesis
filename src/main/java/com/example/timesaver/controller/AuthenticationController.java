@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
@@ -95,5 +97,41 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/change-password/{userName}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> changePassword(@RequestBody com.example.timesaver.model.dto.auth.ChangePasswordRequest request,
+                                                 @PathVariable String userName) {
+        return authService.changePassword(userName, request.getOldPassword(), request.getNewPassword());
+    }
+
+    @DeleteMapping("/delete-profile/{userName}")
+    @PreAuthorize("hasAnyRole('PARTICIPANT', 'ORGANIZER')")
+    public ResponseEntity<String> deleteParticipantProfile(@PathVariable String userName) {
+        try {
+            // Retrieve the currently authenticated user's authorities
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            boolean isParticipant = authentication.getAuthorities().stream()
+                    .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("PARTICIPANT"));
+            boolean isOrganizer = authentication.getAuthorities().stream()
+                    .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ORGANIZER"));
+
+            if (isParticipant) {
+                authService.deleteParticipantProfile(userName);
+            } else if (isOrganizer) {
+                authService.deleteOrganizerProfile(userName);
+            } else {
+                // This case should theoretically not happen because @PreAuthorize already restricts roles,
+                // but it's included for safety.
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("User does not have a valid role for deletion.");
+            }
+
+            return ResponseEntity.ok("Profile deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting profile: " + e.getMessage());
+        }
     }
 }

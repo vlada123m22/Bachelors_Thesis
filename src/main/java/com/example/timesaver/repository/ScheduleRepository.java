@@ -7,10 +7,10 @@ import org.springframework.scheduling.annotation.Schedules;
 
 import java.util.List;
 
-public interface ScheduleRepository extends JpaRepository<ProjectSchedule, Long> {
+public interface ScheduleRepository extends JpaRepository<ProjectSchedule, Integer> {
 
-    List<ProjectSchedule> findByProjectProjectId(Long projectId);
+    List<ProjectSchedule> findByProjectProjectId(Integer projectId);
 
-    List<ProjectSchedule> findByProjectProjectIdAndDayNumber(Long projectId, Integer dayNumber);
+    List<ProjectSchedule> findByProjectProjectIdAndDayNumber(Integer projectId, Integer dayNumber);
 }
 

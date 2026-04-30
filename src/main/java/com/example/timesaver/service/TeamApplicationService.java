@@ -70,7 +70,7 @@ public class TeamApplicationService {
     }
 
     @Transactional
-    public Team createTeam(Long projectId, Long leadApplicantId, CreateTeamRequest req) {
+    public Team createTeam(Integer projectId, Integer leadApplicantId, CreateTeamRequest req) {
         Project p = projectRepository.findById(projectId)
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
         require(Boolean.FALSE.equals(p.getTeamsPreformed()), "Teams are preformed for this project");
@@ -135,7 +135,7 @@ public class TeamApplicationService {
     }
 
     @Transactional
-    public void applyToTeam(Long teamId, Long applicantId) {
+    public void applyToTeam(Integer teamId, Integer applicantId) {
         Team team = teamRepository.findById(teamId).orElseThrow();
         Project p = team.getProject();
         require(Boolean.FALSE.equals(p.getTeamsPreformed()), "Teams are preformed for this project");
@@ -167,7 +167,7 @@ public class TeamApplicationService {
     }
 
     @Transactional
-    public void decideApplication(Long teamId, Long appId, Long actingLeadApplicantId, DecisionRequest req) {
+    public void decideApplication(Integer teamId, Integer appId, Integer actingLeadApplicantId, DecisionRequest req) {
         Team team = teamRepository.findById(teamId).orElseThrow();
         require(team.getLead() != null && Objects.equals(team.getLead().getApplicantId(), actingLeadApplicantId),
                 "Only the team lead can decide applications");
@@ -244,40 +244,40 @@ public class TeamApplicationService {
     }
 
     @Transactional
-    public void leaveTeam(Long teamId, Long memberId, Long actingApplicantId) {
+    public void leaveTeam(Integer teamId, Integer memberId, Integer actingApplicantId) {
         Team team = teamRepository.findById(teamId).orElseThrow();
         TeamMember member = teamMemberRepository.findById(memberId).orElseThrow();
         require(Objects.equals(member.getTeam().getTeamId(), teamId), "Member not in this team");
         require(Objects.equals(member.getApplicant().getApplicantId(), actingApplicantId), "Only the member can leave");
 
-        memberRoleRepo.deleteByMemberId(memberId);
-        memberBgRepo.deleteByMemberId(memberId);
+        memberRoleRepo.deleteByMemberTeamMemberId(memberId);
+        memberBgRepo.deleteByMemberTeamMemberId(memberId);
         teamMemberRepository.delete(member);
     }
 
 
     @Transactional
-    public void removeMember(Long teamId, Long memberId, Long actingLeadApplicantId) {
+    public void removeMember(Integer teamId, Integer memberId, Integer actingLeadApplicantId) {
         Team team = teamRepository.findById(teamId).orElseThrow();
         require(team.getLead() != null && Objects.equals(team.getLead().getApplicantId(), actingLeadApplicantId),
                 "Only lead can remove members");
         TeamMember member = teamMemberRepository.findById(memberId).orElseThrow();
         require(Objects.equals(member.getTeam().getTeamId(), teamId), "Member not in this team");
 
-        memberRoleRepo.deleteByMemberId(memberId);
-        memberBgRepo.deleteByMemberId(memberId);
+        memberRoleRepo.deleteByMemberTeamMemberId(memberId);
+        memberBgRepo.deleteByMemberTeamMemberId(memberId);
         teamMemberRepository.delete(member);
     }
 
     @Transactional
-    public List<TeamApplicationDTO> getTeamApplications(Long teamId, Long actingLeadApplicantId) {
+    public List<TeamApplicationDTO> getTeamApplications(Integer teamId, Integer actingLeadApplicantId) {
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new NoSuchElementException("Team not found"));
         require(team.getLead() != null && Objects.equals(team.getLead().getApplicantId(), actingLeadApplicantId),
                 "Only lead can view applications");
 
         return teamApplicationRepository.findByTeam(team).stream()
                 .map(app -> new TeamApplicationDTO(
-                        app.getId(),
+                        app.getTeamApplicationId(),
                         app.getTeam().getTeamId(),
                         app.getApplicant().getApplicantId(),
                         app.getApplicant().getFirstName(),
@@ -289,7 +289,7 @@ public class TeamApplicationService {
     }
 
     @Transactional
-    public List<TeamListingDTO> listTeams(Long projectId) {
+    public List<TeamListingDTO> listTeams(Integer projectId) {
         Project p = projectRepository.findById(projectId).orElseThrow();
         List<Team> teams = teamRepository.findAllTeamsByProject(projectId);
         int max = maxTeamSize(p);

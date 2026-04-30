@@ -6,7 +6,6 @@ import com.example.timesaver.model.dto.teamflow.DecisionRequest;
 import com.example.timesaver.model.dto.teamflow.TeamApplicationDTO;
 import com.example.timesaver.model.dto.teamflow.TeamListingDTO;
 import com.example.timesaver.repository.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -200,7 +199,7 @@ public class TeamApplicationServiceTest {
         Team team = new Team();
         team.setTeamId(teamId);
         TeamMember member = new TeamMember();
-        member.setId(memberId);
+        member.setTeamMemberId(memberId);
         member.setTeam(team);
         Applicant applicant = new Applicant();
         applicant.setApplicantId(memberId);
@@ -225,7 +224,7 @@ public class TeamApplicationServiceTest {
         team.setLead(lead);
 
         TeamMember member = new TeamMember();
-        member.setId(memberId);
+        member.setTeamMemberId(memberId);
         member.setTeam(team);
 
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));

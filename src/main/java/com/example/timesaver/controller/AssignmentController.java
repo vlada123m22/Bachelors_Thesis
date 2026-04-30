@@ -27,14 +27,14 @@ public class AssignmentController {
 
     @GetMapping("/project/{projectId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<Assignment>> getAssignmentsByProject(@PathVariable Long projectId) {
+    public ResponseEntity<List<Assignment>> getAssignmentsByProject(@PathVariable Integer projectId) {
         return ResponseEntity.ok(assignmentService.getAssignmentsByProject(projectId));
     }
 
     @PostMapping("/{assignmentId}/submission")
     @PreAuthorize("hasRole('PARTICIPANT')")
     public ResponseEntity<Submission> submitAssignment(
-            @PathVariable Long assignmentId,
+            @PathVariable Integer assignmentId,
             @RequestParam(required = false) String text,
             @RequestParam(required = false) MultipartFile file,
             Authentication authentication) throws IOException {
@@ -46,7 +46,7 @@ public class AssignmentController {
     @GetMapping("/{assignmentId}/submission")
     @PreAuthorize("hasAnyRole('PARTICIPANT', 'MENTOR', 'ORGANIZER')")
     public ResponseEntity<Submission> getTeamSubmission(
-            @PathVariable Long assignmentId,
+            @PathVariable Integer assignmentId,
             Authentication authentication) {
 
         String username = authentication.getName();
@@ -55,7 +55,7 @@ public class AssignmentController {
 
     @GetMapping("/{assignmentId}/submissions")
     @PreAuthorize("hasAnyRole('MENTOR', 'ORGANIZER', 'ADMIN')")
-    public ResponseEntity<List<Submission>> getAllSubmissions(@PathVariable Long assignmentId) {
+    public ResponseEntity<List<Submission>> getAllSubmissions(@PathVariable Integer assignmentId) {
         return ResponseEntity.ok(assignmentService.getAllSubmissionsForAssignment(assignmentId));
     }
 }

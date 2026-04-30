@@ -28,7 +28,7 @@ public class ApplicantsDisplayService {
         this.questionAnswerRepository = questionAnswerRepository;
     }
 
-    public GetTeamsDTO getTeams(Long projectId){
+    public GetTeamsDTO getTeams(Integer projectId){
 
         List<Team> teams = teamRepository.findAllTeamsByProject(projectId);
         List<TeammateDTO> singleApplicants = applicantRepository.getSingleApplicantsFirstAndLastName(projectId);
@@ -47,22 +47,22 @@ public class ApplicantsDisplayService {
 
     }
 
-    public GetParticipantsDTO getParticipants(Long projectId){
+    public GetParticipantsDTO getParticipants(Integer projectId){
         List<QuestionDTO> questionDTOs = questionRepository.findQuestionByProjectId(projectId);
 
-        List<Applicant> participantsWithTeam = applicantRepository.getApplicantsWithTeam(projectId);
-        List<Applicant> participantsWithNoTeam = applicantRepository.getApplicantsWithNoTeam(projectId);
+        List<GetParticipantsHelperDTO> participantsWithTeam = applicantRepository.getApplicantsWithTeam(projectId);
+        List<GetParticipantsHelperDTO> participantsWithNoTeam = applicantRepository.getApplicantsWithNoTeam(projectId);
 
         List<ParticipantWithTeamDTO> participantsWithTeamDTOs = new ArrayList<>();
         List<ParticipantWithNoTeamDTO> participantsWithNoTeamDTOs = new ArrayList<>();
 
-        for (Applicant applicant : participantsWithTeam){
+        for (GetParticipantsHelperDTO applicant : participantsWithTeam){
             List<QuestionAnswerDTO> questionAnswers = questionAnswerRepository.findQuestionNumberAndAnswerByApplicantId(applicant.getApplicantId());
-            ParticipantWithTeamDTO participantDTO = new ParticipantWithTeamDTO(applicant.getFirstName(),applicant.getLastName(), applicant.getTeam().getTeamName(), applicant.getIsSelected(), questionAnswers);
+            ParticipantWithTeamDTO participantDTO = new ParticipantWithTeamDTO(applicant.getFirstName(),applicant.getLastName(), applicant.getTeamName(), applicant.getIsSelected(), questionAnswers);
             participantsWithTeamDTOs.add(participantDTO);
         }
 
-        for(Applicant applicant : participantsWithNoTeam){
+        for(GetParticipantsHelperDTO applicant : participantsWithNoTeam){
             List<QuestionAnswerDTO> questionAnswers = questionAnswerRepository.findQuestionNumberAndAnswerByApplicantId(applicant.getApplicantId());
             ParticipantWithNoTeamDTO participantDTO = new ParticipantWithNoTeamDTO(applicant.getFirstName(),applicant.getLastName(), applicant.getIsSelected(),questionAnswers);
             participantsWithNoTeamDTOs.add(participantDTO);

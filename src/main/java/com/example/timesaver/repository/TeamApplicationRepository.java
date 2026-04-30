@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface TeamApplicationRepository extends JpaRepository<TeamApplication, Long> {
+public interface TeamApplicationRepository extends JpaRepository<TeamApplication, Integer> {
     Optional<TeamApplication> findByTeamAndApplicant(Team team, Applicant applicant);
     List<TeamApplication> findByTeamAndStatus(Team team, Status status);
     List<TeamApplication> findByTeam(Team team);
