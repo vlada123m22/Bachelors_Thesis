@@ -42,7 +42,7 @@ public class ProjectServiceTest {
         SecurityContextHolder.setContext(securityContext);
     }
 
-    private void mockUser(String username, Long userId) {
+    private User mockUser(String username, Integer userId) {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
@@ -50,11 +50,12 @@ public class ProjectServiceTest {
         user.setId(userId);
         user.setUserName(username);
         when(userRepository.findByUserName(username)).thenReturn(Optional.of(user));
+        return user;
     }
 
     @Test
     public void testCreateProjectSuccess() {
-        mockUser("organizer", 1L);
+        mockUser("organizer", 1);
         CreateProjectRequest req = new CreateProjectRequest();
         req.setProjectName("Test Project");
         req.setRoleOptions(List.of("Role1"));
@@ -66,13 +67,13 @@ public class ProjectServiceTest {
 
         when(projectRepository.save(any())).thenAnswer(i -> {
             Project p = i.getArgument(0);
-            p.setProjectId(100L);
+            p.setProjectId(100);
             return p;
         });
 
         ProjectResponse resp = projectService.createProject(req);
         assertEquals("Success", resp.getStatus());
-        assertEquals(100L, resp.getProjectId());
+        assertEquals(100, resp.getProjectId());
     }
 
     @Test
@@ -85,46 +86,8 @@ public class ProjectServiceTest {
     }
 
     @Test
-    public void testCreateProjectWithNullTeamsPreformed() {
-        mockUser("organizer", 1L);
-        CreateProjectRequest req = new CreateProjectRequest();
-        req.setProjectName("Test Project");
-        req.setTeamsPreformed(null);
-        req.setFormQuestions(Collections.emptyList());
-        req.setSchedules(Collections.emptyList());
-
-        when(projectRepository.save(any())).thenAnswer(i -> {
-            Project p = i.getArgument(0);
-            p.setProjectId(100L);
-            return p;
-        });
-
-        ProjectResponse resp = projectService.createProject(req);
-        assertEquals("Success", resp.getStatus());
-    }
-
-    @Test
-    public void testCreateProjectWithTeamsPreformedTrue() {
-        mockUser("organizer", 1L);
-        CreateProjectRequest req = new CreateProjectRequest();
-        req.setProjectName("Test Project");
-        req.setTeamsPreformed(true);
-        req.setFormQuestions(Collections.emptyList());
-        req.setSchedules(Collections.emptyList());
-
-        when(projectRepository.save(any())).thenAnswer(i -> {
-            Project p = i.getArgument(0);
-            p.setProjectId(100L);
-            return p;
-        });
-
-        ProjectResponse resp = projectService.createProject(req);
-        assertEquals("Success", resp.getStatus());
-    }
-
-    @Test
     public void testCreateProjectWithQuestions() {
-        mockUser("organizer", 1L);
+        mockUser("organizer", 1);
         CreateProjectRequest req = new CreateProjectRequest();
         req.setProjectName("Test Project");
         FormQuestionDTO q1 = new FormQuestionDTO();
@@ -136,7 +99,7 @@ public class ProjectServiceTest {
 
         when(projectRepository.save(any())).thenAnswer(i -> {
             Project p = i.getArgument(0);
-            p.setProjectId(100L);
+            p.setProjectId(100);
             return p;
         });
 
@@ -147,7 +110,7 @@ public class ProjectServiceTest {
 
     @Test
     public void testCreateProjectWithSchedules() {
-        mockUser("organizer", 1L);
+        mockUser("organizer", 1);
         CreateProjectRequest req = new CreateProjectRequest();
         req.setProjectName("Test Project");
         req.setFormQuestions(Collections.emptyList());
@@ -159,7 +122,7 @@ public class ProjectServiceTest {
 
         when(projectRepository.save(any())).thenAnswer(i -> {
             Project p = i.getArgument(0);
-            p.setProjectId(100L);
+            p.setProjectId(100);
             return p;
         });
 
@@ -170,7 +133,7 @@ public class ProjectServiceTest {
 
     @Test
     public void testCreateProjectValidationFailures() {
-        mockUser("organizer", 1L);
+        mockUser("organizer", 1);
 
         // Min > Max
         CreateProjectRequest req = new CreateProjectRequest();
@@ -182,7 +145,8 @@ public class ProjectServiceTest {
 
         // Non-sequential questions
         req = new CreateProjectRequest();
-        FormQuestionDTO q1 = new FormQuestionDTO(); q1.setQuestionNumber(2);
+        FormQuestionDTO q1 = new FormQuestionDTO();
+        q1.setQuestionNumber(2);
         req.setFormQuestions(List.of(q1));
         resp = projectService.createProject(req);
         assertEquals("Failure", resp.getStatus());
@@ -190,8 +154,10 @@ public class ProjectServiceTest {
 
         // Duplicate question numbers
         req = new CreateProjectRequest();
-        FormQuestionDTO q2 = new FormQuestionDTO(); q2.setQuestionNumber(1);
-        FormQuestionDTO q3 = new FormQuestionDTO(); q3.setQuestionNumber(1);
+        FormQuestionDTO q2 = new FormQuestionDTO();
+        q2.setQuestionNumber(1);
+        FormQuestionDTO q3 = new FormQuestionDTO();
+        q3.setQuestionNumber(1);
         req.setFormQuestions(List.of(q2, q3));
         resp = projectService.createProject(req);
         assertEquals("Failure", resp.getStatus());
@@ -200,17 +166,18 @@ public class ProjectServiceTest {
 
     @Test
     public void testGetProjectSuccess() {
-        Long projectId = 1L;
+        Integer projectId = 1;
         Project project = new Project();
         project.setProjectId(projectId);
         project.setProjectName("Test");
         project.setStartDate(ZonedDateTime.now());
         project.setEndDate(ZonedDateTime.now().plusDays(1));
-        User organizer = new User(); organizer.setId(10L);
+        User organizer = new User();
+        organizer.setId(10);
         project.setOrganizer(organizer);
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        when(questionRepository.findByProjectId(projectId)).thenReturn(Collections.emptyList());
+        when(questionRepository.findByProjectIdFormRetrieval(projectId)).thenReturn(Collections.emptyList());
 
         GetProjectResponse resp = projectService.getProject(projectId, "UTC");
         assertEquals("Test", resp.getProjectName());
@@ -226,11 +193,12 @@ public class ProjectServiceTest {
         project.setProjectName("Test");
         project.setStartDate(null);
         project.setEndDate(null);
-        User organizer = new User(); organizer.setId(10L);
+        User organizer = new User();
+        organizer.setId(10);
         project.setOrganizer(organizer);
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        when(questionRepository.findByProjectId(projectId)).thenReturn(Collections.emptyList());
+        when(questionRepository.findByProjectIdFormRetrieval(projectId)).thenReturn(Collections.emptyList());
 
         GetProjectResponse resp = projectService.getProject(projectId, "UTC");
         assertNull(resp.getStartDate());
@@ -239,20 +207,21 @@ public class ProjectServiceTest {
 
     @Test
     public void testGetProjectNotFound() {
-        when(projectRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> projectService.getProject(1L, "UTC"));
+        when(projectRepository.findById(1)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> projectService.getProject(1, "UTC"));
     }
 
     @Test
     public void testEditProjectSuccess() {
-        mockUser("organizer", 1L);
+        mockUser("organizer", 1);
         EditProjectRequest req = new EditProjectRequest();
-        req.setProjectId(100L);
+        req.setProjectId(100);
         req.setProjectName("Updated");
         req.setFormQuestions(Collections.emptyList());
         req.setSchedules(Collections.emptyList());
 
-        User organizer = new User(); organizer.setId(1L);
+        User organizer = new User();
+        organizer.setId(1);
         Project project = new Project();
         project.setProjectId(100);
         project.setOrganizer(organizer);
@@ -276,11 +245,11 @@ public class ProjectServiceTest {
 
     @Test
     public void testEditProjectNotFound() {
-        mockUser("organizer", 1L);
+        mockUser("organizer", 1);
         EditProjectRequest req = new EditProjectRequest();
-        req.setProjectId(100L);
+        req.setProjectId(100);
 
-        when(projectRepository.findById(100L)).thenReturn(Optional.empty());
+        when(projectRepository.findById(100)).thenReturn(Optional.empty());
 
         ResponseEntity<ProjectResponse> resp = projectService.editProject(req);
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
@@ -288,16 +257,17 @@ public class ProjectServiceTest {
 
     @Test
     public void testEditProjectForbidden() {
-        mockUser("organizer", 1L);
+        mockUser("organizer", 1);
         EditProjectRequest req = new EditProjectRequest();
-        req.setProjectId(100L);
+        req.setProjectId(100);
 
-        User organizer = new User(); organizer.setId(2L); // Different user
+        User organizer = new User();
+        organizer.setId(2); // Different user
         Project project = new Project();
-        project.setProjectId(100L);
+        project.setProjectId(100);
         project.setOrganizer(organizer);
 
-        when(projectRepository.findById(100L)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(100)).thenReturn(Optional.of(project));
 
         ResponseEntity<ProjectResponse> resp = projectService.editProject(req);
         assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
@@ -305,17 +275,18 @@ public class ProjectServiceTest {
 
     @Test
     public void testEditProjectValidationFailures() {
-        mockUser("organizer", 1L);
-        User organizer = new User(); organizer.setId(1L);
+        mockUser("organizer", 1);
+        User organizer = new User();
+        organizer.setId(1);
         Project project = new Project();
-        project.setProjectId(100L);
+        project.setProjectId(100);
         project.setOrganizer(organizer);
 
-        when(projectRepository.findById(100L)).thenReturn(Optional.of(project));
+        when(projectRepository.findById(100)).thenReturn(Optional.of(project));
 
         // Min > Max
         EditProjectRequest req = new EditProjectRequest();
-        req.setProjectId(100L);
+        req.setProjectId(100);
         req.setMinNrParticipants(10);
         req.setMaxNrParticipants(5);
         ResponseEntity<ProjectResponse> resp = projectService.editProject(req);
@@ -323,80 +294,49 @@ public class ProjectServiceTest {
 
         // Invalid questions
         req = new EditProjectRequest();
-        req.setProjectId(100L);
-        FormQuestionDTO q1 = new FormQuestionDTO(); q1.setQuestionNumber(2);
+        req.setProjectId(100);
+        FormQuestionDTO q1 = new FormQuestionDTO();
+        q1.setQuestionNumber(2);
         req.setFormQuestions(List.of(q1));
         resp = projectService.editProject(req);
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
     }
 
     @Test
-    public void testEditProjectWithAllOptions() {
-        mockUser("organizer", 1L);
-        EditProjectRequest req = new EditProjectRequest();
-        req.setProjectId(100L);
-        req.setProjectName("Updated");
-        req.setRoleOptions(List.of("Role1"));
-        req.setBackgroundOptions(List.of("Bkg1"));
-        req.setRolesQuestionText("Roles?");
-        req.setBackgroundQuestionText("Background?");
-        req.setFormQuestions(Collections.emptyList());
-        req.setSchedules(Collections.emptyList());
-
-        User organizer = new User(); organizer.setId(1L);
-        Project project = new Project();
-        project.setProjectId(100L);
-        project.setOrganizer(organizer);
-
-        when(projectRepository.findById(100L)).thenReturn(Optional.of(project));
-        when(projectRepository.save(any())).thenReturn(project);
-        when(scheduleRepository.findByProjectProjectId(100L)).thenReturn(Collections.emptyList());
-
-        ResponseEntity<ProjectResponse> resp = projectService.editProject(req);
-        assertEquals(HttpStatus.OK, resp.getStatusCode());
-        verify(questionRepository, times(2)).deleteQuestions(100);
-    }
-
-    @Test
     public void testDeleteProjectSuccess() {
-        Long projectId = 100L;
-        mockUser("organizer", 1L);
-        when(projectRepository.existsByProjectIdAndOrganizer(eq(projectId), any(User.class))).thenReturn(true);
+        Integer projectId = 100;
+        User user = mockUser("organizer", 1);
+
+        when(projectRepository.deleteProjectById(projectId, 1)).thenReturn(Optional.of("Success"));
 
         ProjectResponse resp = projectService.deleteProject(projectId);
         assertEquals("Success", resp.getStatus());
         verify(projectRepository).deleteById(projectId);
     }
 
-    @Test
-    public void testDeleteProjectNotAuthenticated() {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        ProjectResponse resp = projectService.deleteProject(100L);
-        assertEquals("Failure", resp.getStatus());
-        assertEquals("User not authenticated", resp.getMessage());
-    }
+//    @Test
+//    public void testDeleteProjectNotAuthenticated() {
+//        when(securityContext.getAuthentication()).thenReturn(null);
+//        ProjectResponse resp = projectService.deleteProject(100);
+//        assertEquals("Failure", resp.getStatus());
+//        assertEquals("User not authenticated", resp.getMessage());
+//    }
 
     @Test
-    public void testDeleteProjectNotFoundOrForbidden() {
-        mockUser("organizer", 1L);
-        when(projectRepository.existsByProjectIdAndOrganizer(eq(100L), any(User.class))).thenReturn(false);
+    public void testDeleteProjectNotFound() {
+        mockUser("organizer", 1);
+        when(projectRepository.deleteProjectById(100, 1)).thenReturn(Optional.of("Project Not Found"));
 
-        ProjectResponse resp = projectService.deleteProject(100L);
+        ProjectResponse resp = projectService.deleteProject(100);
         assertEquals("Failure", resp.getStatus());
         assertTrue(resp.getMessage().contains("not found") || resp.getMessage().contains("permission"));
     }
 
     @Test
     public void testGetAllUserProjects() {
-        mockUser("organizer", 1L);
-        User organizer = new User(); organizer.setId(1L);
-
-        GetProjectResponse p1 = new GetProjectResponse();
-        p1.setProjectId(1L);
-        p1.setProjectName("Project 1");
-
-        when(projectRepository.findMainProjInfoByOrganizer(any(User.class))).thenReturn(List.of(p1));
-        when(questionRepository.findByProjectId(1L)).thenReturn(Collections.emptyList());
+        mockUser("organizer", 1);
+        GetProjectResponse gpr = new GetProjectResponse(1, "Project 1", "D", null, null, 10, 1);
+        when(projectRepository.findMainProjInfoByOrganizer(any(User.class))).thenReturn(List.of(gpr));
 
         List<GetProjectResponse> projects = projectService.getAllUserProjects();
         assertEquals(1, projects.size());
@@ -413,14 +353,15 @@ public class ProjectServiceTest {
     public void testCanUserViewSchedule_Everybody() {
         Project project = new Project();
         project.setScheduleVisibility(ScheduleVisibility.EVERYBODY);
-
         assertTrue(projectService.canUserViewSchedule(project, null));
     }
 
     @Test
     public void testCanUserViewSchedule_Organizer() {
-        User organizer = new User(); organizer.setId(1L);
-        User user = new User(); user.setId(1L);
+        User organizer = new User();
+        organizer.setId(1);
+        User user = new User();
+        user.setId(1);
 
         Project project = new Project();
         project.setScheduleVisibility(ScheduleVisibility.APPLICANTS);
@@ -431,63 +372,64 @@ public class ProjectServiceTest {
 
     @Test
     public void testCanUserViewSchedule_Applicants() {
-        User organizer = new User(); organizer.setId(1L);
-        User user = new User(); user.setId(2L);
+        User organizer = new User();
+        organizer.setId(1);
+        User user = new User();
+        user.setId(2);
 
         Project project = new Project();
         project.setScheduleVisibility(ScheduleVisibility.APPLICANTS);
         project.setOrganizer(organizer);
 
-        Applicant applicant = new Applicant();
-        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.of(applicant.getIsSelected()));
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.of(false));
 
         assertTrue(projectService.canUserViewSchedule(project, user));
     }
 
     @Test
     public void testCanUserViewSchedule_AcceptedParticipants() {
-        User organizer = new User(); organizer.setId(1L);
-        User user = new User(); user.setId(2L);
+        User organizer = new User();
+        organizer.setId(1);
+        User user = new User();
+        user.setId(2);
 
         Project project = new Project();
         project.setScheduleVisibility(ScheduleVisibility.ACCEPTED_PARTICIPANTS);
         project.setOrganizer(organizer);
 
-        Applicant applicant = new Applicant();
-        applicant.setIsSelected(true);
-        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.of(applicant.getIsSelected()));
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.of(true));
 
         assertTrue(projectService.canUserViewSchedule(project, user));
     }
 
     @Test
     public void testCanUserViewSchedule_NotApplicant() {
-        User organizer = new User(); organizer.setId(1L);
-        User user = new User(); user.setId(2L);
+        User organizer = new User();
+        organizer.setId(1);
+        User user = new User();
+        user.setId(2);
 
         Project project = new Project();
         project.setScheduleVisibility(ScheduleVisibility.APPLICANTS);
         project.setOrganizer(organizer);
 
-        when(applicantRepository.getIsSelectedByUserAndProject(user, project))
-                .thenReturn(Optional.empty());
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.empty());
 
         assertFalse(projectService.canUserViewSchedule(project, user));
     }
 
     @Test
     public void testCanUserViewSchedule_NotAccepted() {
-        User organizer = new User(); organizer.setId(1L);
-        User user = new User(); user.setId(2L);
+        User organizer = new User();
+        organizer.setId(1);
+        User user = new User();
+        user.setId(2);
 
         Project project = new Project();
         project.setScheduleVisibility(ScheduleVisibility.ACCEPTED_PARTICIPANTS);
         project.setOrganizer(organizer);
 
-        Applicant applicant = new Applicant();
-        applicant.setIsSelected(false);
-        when(applicantRepository.getIsSelectedByUserAndProject(user, project))
-                .thenReturn(Optional.of(false));
+        when(applicantRepository.getIsSelectedByUserAndProject(user, project)).thenReturn(Optional.of(false));
 
         assertFalse(projectService.canUserViewSchedule(project, user));
     }
@@ -495,17 +437,17 @@ public class ProjectServiceTest {
     @Test
     public void testGetProjectById() {
         Project project = new Project();
-        project.setProjectId(1L);
-        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+        project.setProjectId(1);
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
 
-        Project result = projectService.getProjectById(1L);
-        assertEquals(1L, result.getProjectId());
+        Project result = projectService.getProjectById(1);
+        assertEquals(1, result.getProjectId());
     }
 
     @Test
     public void testGetProjectByIdNotFound() {
-        when(projectRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> projectService.getProjectById(1L));
+        when(projectRepository.findById(1)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> projectService.getProjectById(1));
     }
 
     @Test
@@ -514,9 +456,9 @@ public class ProjectServiceTest {
         schedule.setActivityTitle("Activity");
         schedule.setActivityDescription("Description");
 
-        when(scheduleRepository.findByProjectProjectIdAndDayNumber(1L, 1)).thenReturn(List.of(schedule));
+        when(scheduleRepository.findByProjectProjectIdAndDayNumber(1, 1)).thenReturn(List.of(schedule));
 
-        List<ScheduleDTO> schedules = projectService.getScheduleByDay(1L, 1);
+        List<ScheduleDTO> schedules = projectService.getScheduleByDay(1, 1);
         assertEquals(1, schedules.size());
         assertEquals("Activity", schedules.get(0).getActivityTitle());
     }

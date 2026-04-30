@@ -42,9 +42,9 @@ public class AssignmentControllerTest {
     @Test
     public void testGetAssignmentsByProject() {
         List<Assignment> assignments = Collections.emptyList();
-        when(assignmentService.getAssignmentsByProject(1L)).thenReturn(assignments);
+        when(assignmentService.getAssignmentsByProject(1)).thenReturn(assignments);
 
-        ResponseEntity<List<Assignment>> response = assignmentController.getAssignmentsByProject(1L);
+        ResponseEntity<List<Assignment>> response = assignmentController.getAssignmentsByProject(1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(assignments, response.getBody());
     }
@@ -54,10 +54,10 @@ public class AssignmentControllerTest {
         Authentication auth = mock(Authentication.class);
         when(auth.getName()).thenReturn("user");
         Submission submission = new Submission();
-        
+
         when(assignmentService.submitAssignment(any(), any(), any(), any())).thenReturn(submission);
 
-        ResponseEntity<Submission> response = assignmentController.submitAssignment(1L, "text", null, auth);
+        ResponseEntity<Submission> response = assignmentController.submitAssignment(1, "text", null, auth);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
@@ -66,19 +66,19 @@ public class AssignmentControllerTest {
         Authentication auth = mock(Authentication.class);
         when(auth.getName()).thenReturn("user");
         Submission submission = new Submission();
-        
+
         when(assignmentService.getTeamSubmission(any(), any())).thenReturn(submission);
 
-        ResponseEntity<Submission> response = assignmentController.getTeamSubmission(1L, auth);
+        ResponseEntity<Submission> response = assignmentController.getTeamSubmission(1, auth);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     public void testGetAllSubmissions() {
         List<Submission> submissions = Collections.emptyList();
-        when(assignmentService.getAllSubmissionsForAssignment(1L)).thenReturn(submissions);
+        when(assignmentService.getAllSubmissionsForAssignment(1)).thenReturn(submissions);
 
-        ResponseEntity<List<Submission>> response = assignmentController.getAllSubmissions(1L);
+        ResponseEntity<List<Submission>> response = assignmentController.getAllSubmissions(1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(submissions, response.getBody());
     }
@@ -89,10 +89,10 @@ public class AssignmentControllerTest {
         when(auth.getName()).thenReturn("user");
 
         when(assignmentService.submitAssignment(any(), any(), any(), any()))
-            .thenThrow(new RuntimeException("Submission error"));
+                .thenThrow(new RuntimeException("Submission error"));
 
         try {
-            assignmentController.submitAssignment(1L, "text", null, auth);
+            assignmentController.submitAssignment(1, "text", null, auth);
         } catch (RuntimeException e) {
             assertEquals("Submission error", e.getMessage());
         }
@@ -104,10 +104,10 @@ public class AssignmentControllerTest {
         when(auth.getName()).thenReturn("user");
 
         when(assignmentService.getTeamSubmission(any(), any()))
-            .thenThrow(new RuntimeException("Not found"));
+                .thenThrow(new RuntimeException("Not found"));
 
         try {
-            assignmentController.getTeamSubmission(1L, auth);
+            assignmentController.getTeamSubmission(1, auth);
         } catch (RuntimeException e) {
             assertEquals("Not found", e.getMessage());
         }

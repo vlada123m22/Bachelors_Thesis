@@ -31,7 +31,7 @@ public class ProjectControllerTest {
     @Test
     public void testCreateProjectSuccess() {
         CreateProjectRequest req = new CreateProjectRequest();
-        ProjectResponse resp = new ProjectResponse("Success", null, 1L);
+        ProjectResponse resp = new ProjectResponse("Success", null, 1);
         when(projectService.createProject(any())).thenReturn(resp);
 
         ResponseEntity<ProjectResponse> response = projectController.createProject(req);
@@ -51,18 +51,18 @@ public class ProjectControllerTest {
 
     @Test
     public void testGetProjectSuccess() {
-        GetProjectResponse resp = new GetProjectResponse(1L, "p", "d", null, null, 10, 1, Collections.emptyList());
-        when(projectService.getProject(1L, "UTC")).thenReturn(resp);
+        GetProjectResponse resp = new GetProjectResponse(1, "p", "d", null, null, 10, 1, Collections.emptyList());
+        when(projectService.getProject(1, "UTC")).thenReturn(resp);
 
-        ResponseEntity<?> response = projectController.getProject(1L, "UTC");
+        ResponseEntity<?> response = projectController.getProject(1, "UTC");
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     public void testGetProjectNotFound() {
-        when(projectService.getProject(1L, "UTC")).thenThrow(new RuntimeException("Not found"));
+        when(projectService.getProject(1, "UTC")).thenThrow(new RuntimeException("Not found"));
 
-        ResponseEntity<?> response = projectController.getProject(1L, "UTC");
+        ResponseEntity<?> response = projectController.getProject(1, "UTC");
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -79,19 +79,37 @@ public class ProjectControllerTest {
     @Test
     public void testDeleteProjectSuccess() {
         ProjectResponse resp = new ProjectResponse("Success", null);
-        when(projectService.deleteProject(1L)).thenReturn(resp);
+        when(projectService.deleteProject(1)).thenReturn(resp);
 
-        ResponseEntity<ProjectResponse> response = projectController.deleteProject(1L);
+        ResponseEntity<ProjectResponse> response = projectController.deleteProject(1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
-    public void testDeleteProjectFailure() {
-        ProjectResponse resp = new ProjectResponse("Failure", "Error");
-        when(projectService.deleteProject(1L)).thenReturn(resp);
+    public void testDeleteProjectNotAuthenticated() {
+        ProjectResponse resp = new ProjectResponse("Failure", "User not authenticated");
+        when(projectService.deleteProject(1)).thenReturn(resp);
 
-        ResponseEntity<ProjectResponse> response = projectController.deleteProject(1L);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ResponseEntity<ProjectResponse> response = projectController.deleteProject(1);
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
+
+    @Test
+    public void testDeleteProjectNotFound() {
+        ProjectResponse resp = new ProjectResponse("Failure", "Project not found or you don't have permission to delete it");
+        when(projectService.deleteProject(1)).thenReturn(resp);
+
+        ResponseEntity<ProjectResponse> response = projectController.deleteProject(1);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void testDeleteProjectOtherFailure() {
+        ProjectResponse resp = new ProjectResponse("Failure", "Error");
+        when(projectService.deleteProject(1)).thenReturn(resp);
+
+        ResponseEntity<ProjectResponse> response = projectController.deleteProject(1);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
@@ -115,12 +133,12 @@ public class ProjectControllerTest {
     public void testGetScheduleForDaySuccess() {
         Project project = new Project();
         User user = new User();
-        when(projectService.getProjectById(1L)).thenReturn(project);
+        when(projectService.getProjectById(1)).thenReturn(project);
         when(projectService.getCurrentUser()).thenReturn(user);
         when(projectService.canUserViewSchedule(project, user)).thenReturn(true);
-        when(projectService.getScheduleByDay(1L, 1)).thenReturn(Collections.emptyList());
+        when(projectService.getScheduleByDay(1, 1)).thenReturn(Collections.emptyList());
 
-        ResponseEntity<?> response = projectController.getScheduleForDay(1L, 1);
+        ResponseEntity<?> response = projectController.getScheduleForDay(1, 1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
@@ -128,11 +146,11 @@ public class ProjectControllerTest {
     public void testGetScheduleForDayForbidden() {
         Project project = new Project();
         User user = new User();
-        when(projectService.getProjectById(1L)).thenReturn(project);
+        when(projectService.getProjectById(1)).thenReturn(project);
         when(projectService.getCurrentUser()).thenReturn(user);
         when(projectService.canUserViewSchedule(project, user)).thenReturn(false);
 
-        ResponseEntity<?> response = projectController.getScheduleForDay(1L, 1);
+        ResponseEntity<?> response = projectController.getScheduleForDay(1, 1);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 }

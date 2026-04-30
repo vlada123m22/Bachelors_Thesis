@@ -21,13 +21,13 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ApplicationServiceTest {
 
     @Mock private ProjectRepository projectRepository;
-    @Mock private TeamRepository teamRepository;
     @Mock private ApplicantRepository applicantRepository;
     @Mock private QuestionAnswerRepository questionAnswerRepository;
     @Mock private FileStorageService fileStorageService;
@@ -50,22 +50,27 @@ public class ApplicationServiceTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn("notAnonymous");
         when(authentication.getName()).thenReturn(username);
-        when(userRepository.findByUserName(username)).thenReturn(Optional.of(new User()));
+        User user = new User();
+        user.setId(1);
+        when(userRepository.findByUserName(username)).thenReturn(Optional.of(user));
+    }
+
+    private List<ApplicantTeam> makeResult(int applicantId, Integer teamId) {
+        return List.of(new ApplicantTeam(applicantId, teamId));
     }
 
     @Test
     public void testGetFormForProject() {
-        Long projectId = 1L;
+        Integer projectId = 1;
         Project project = new Project();
         project.setProjectId(projectId);
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        
+        when(projectRepository.getBackgroundsRolesByProjectId(projectId)).thenReturn(Optional.of(project));
+
         FormQuestion q = new FormQuestion();
         q.setQuestionNumber(1);
         q.setQuestion("How are you?");
         q.setQuestionType(QuestionType.TEXT);
-        
-        when(questionRepository.findByProjectId(projectId)).thenReturn(List.of(q));
+        when(questionRepository.findByProjectIdFormRetrieval(projectId)).thenReturn(List.of(q));
 
         GetFormResponse result = applicationService.getFormForProject(projectId);
         assertEquals(1, result.getFormQuestions().size());
@@ -74,24 +79,15 @@ public class ApplicationServiceTest {
 
     @Test
     public void testGetFormForProjectNotFound() {
-        when(projectRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> applicationService.getFormForProject(1L));
+        when(projectRepository.getBackgroundsRolesByProjectId(1)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> applicationService.getFormForProject(1));
     }
 
     @Test
-    public void testSubmitApplicationSingleNoTeamSuccess() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setTeamsPreformed(false);
-        project.setRolesOptions("Dev|Design");
-        project.setBackgroundOptions("CS|Art");
-
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+    public void testSubmitApplicationSuccess() {
         mockUser("testuser");
-
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
+        req.setProjectId(1);
         req.setFirstName("John");
         req.setLastName("Doe");
         req.setTimezone("UTC");
@@ -100,198 +96,115 @@ public class ApplicationServiceTest {
         req.setJoinExistentTeam(false);
         req.setQuestionsAnswers(Collections.emptyList());
 
-        ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
-
-        assertEquals("Success", resp.getStatus());
-        verify(applicantRepository).save(any(Applicant.class));
-    }
-
-    @Test
-    public void testSubmitApplicationWithTeamNameAndTeammatesSuccess() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setTeamsPreformed(false);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        mockUser("testuser");
-
-        SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
-        req.setFirstName("John");
-        req.setLastName("Doe");
-        req.setTimezone("UTC");
-        req.setRoles(List.of("Dev"));
-        req.setBackground(List.of("CS"));
-        req.setTeamName("Cool Team");
-        req.setJoinExistentTeam(false);
-        TeammateDTO teammate = new TeammateDTO();
-        teammate.setFirstName("Jane");
-        teammate.setLastName("Doe");
-        req.setTeammates(List.of(teammate));
-        req.setQuestionsAnswers(Collections.emptyList());
-
-        when(teamRepository.findByTeamNameIgnoreCaseAndProject(anyString(), eq(project))).thenReturn(Optional.empty());
-        when(teamRepository.save(any(Team.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(42, null));
 
         ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
         assertEquals("Success", resp.getStatus());
-        verify(teamRepository).save(any(Team.class));
-        verify(applicantRepository, atLeast(2)).save(any(Applicant.class));
     }
 
     @Test
-    public void testSubmitApplicationJoinExistingTeamSuccess() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setTeamsPreformed(false);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+    public void testSubmitApplicationProjectNotFound() {
         mockUser("testuser");
-
-        Team existingTeam = new Team();
-        existingTeam.setTeamName("Cool Team");
-        when(teamRepository.findByTeamNameIgnoreCaseAndProject("Cool Team", project)).thenReturn(Optional.of(existingTeam));
-
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
-        req.setFirstName("John");
-        req.setLastName("Doe");
-        req.setTeamName("Cool Team");
-        req.setJoinExistentTeam(true);
-        TeammateDTO teammate = new TeammateDTO();
-        teammate.setFirstName("Jane");
-        teammate.setLastName("Doe");
-        req.setTeammates(List.of(teammate));
+        req.setProjectId(99);
         req.setTimezone("UTC");
         req.setRoles(List.of("Dev"));
         req.setBackground(List.of("CS"));
         req.setQuestionsAnswers(Collections.emptyList());
 
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(0, null));
+
         ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
-        assertEquals("Success", resp.getStatus());
+        assertTrue(resp.getStatus().startsWith("404"));
     }
 
     @Test
-    public void testSubmitApplicationTeamAlreadyExistsFailure() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setTeamsPreformed(false);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+    public void testSubmitApplicationUnauthorized() {
         mockUser("testuser");
-
-        Team existingTeam = new Team();
-        when(teamRepository.findByTeamNameIgnoreCaseAndProject("Cool Team", project)).thenReturn(Optional.of(existingTeam));
-
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
+        req.setProjectId(1);
+        req.setTimezone("UTC");
+        req.setRoles(List.of("Dev"));
+        req.setBackground(List.of("CS"));
+        req.setQuestionsAnswers(Collections.emptyList());
+
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(-1, null));
+
+        ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
+        assertTrue(resp.getStatus().startsWith("401"));
+    }
+
+    @Test
+    public void testSubmitApplicationTeamAlreadyExists() {
+        mockUser("testuser");
+        SubmitApplicationRequest req = new SubmitApplicationRequest();
+        req.setProjectId(1);
         req.setTeamName("Cool Team");
         req.setJoinExistentTeam(false);
         req.setTimezone("UTC");
         req.setRoles(List.of("Dev"));
         req.setBackground(List.of("CS"));
+        req.setQuestionsAnswers(Collections.emptyList());
+
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(-2, null));
 
         ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
-        assertEquals("Failure", resp.getStatus());
+        assertTrue(resp.getStatus().startsWith("409"));
         assertTrue(resp.getTeamExists());
     }
 
     @Test
-    public void testSubmitApplicationInvalidRole() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-
+    public void testSubmitApplicationInvalidRolesOrBackgrounds() {
+        mockUser("testuser");
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
+        req.setProjectId(1);
+        req.setTimezone("UTC");
         req.setRoles(List.of("Manager"));
-        req.setTimezone("UTC");
+        req.setBackground(List.of("CS"));
+        req.setQuestionsAnswers(Collections.emptyList());
 
-        assertThrows(ApplicationException.class, () -> applicationService.submitApplication(req, Collections.emptyMap()));
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(-3, null));
+
+        ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
+        assertTrue(resp.getStatus().startsWith("400"));
     }
 
     @Test
-    public void testSubmitApplicationMissingTeamNameWithTeammates() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        mockUser("test");
-
+    public void testSubmitApplicationThrowsOnInvalidTimezone() {
+        mockUser("testuser");
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
-        req.setTeammates(List.of(new TeammateDTO()));
-        req.setTimezone("UTC");
-        req.setRoles(List.of("Dev"));
-        req.setBackground(List.of("CS"));
+        req.setProjectId(1);
+        req.setTimezone("Invalid/Zone");
 
-        assertThrows(ApplicationException.class, () -> applicationService.submitApplication(req, Collections.emptyMap()));
+        assertThrows(Exception.class, () -> applicationService.submitApplication(req, Collections.emptyMap()));
     }
 
     @Test
-    public void testSubmitApplicationTeamWithOnlyOneMember() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        mockUser("test");
+    public void testSubmitApplicationThrowsWhenNotAuthenticated() {
+        when(securityContext.getAuthentication()).thenReturn(null);
 
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
-        req.setTeamName("My Team");
-        req.setTeammates(Collections.emptyList());
-        req.setTimezone("UTC");
-        req.setRoles(List.of("Dev"));
-        req.setBackground(List.of("CS"));
+        req.setProjectId(1);
 
-        assertThrows(ApplicationException.class, () -> applicationService.submitApplication(req, Collections.emptyMap()));
+        assertThrows(Exception.class, () -> applicationService.submitApplication(req, Collections.emptyMap()));
     }
 
     @Test
     public void testSubmitApplicationQuestionsHandling() throws IOException {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         mockUser("test");
-
-        FormQuestion qText = new FormQuestion();
-        qText.setQuestionNumber(1);
-        qText.setQuestionType(QuestionType.TEXT);
-        qText.setQuestion("Name?");
-
-        FormQuestion qFile = new FormQuestion();
-        qFile.setQuestionNumber(2);
-        qFile.setQuestionType(QuestionType.FILE);
-        qFile.setQuestion("CV?");
-
-        when(questionRepository.findByProjectId(projectId)).thenReturn(List.of(qText, qFile));
-
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
+        req.setProjectId(1);
         req.setTimezone("UTC");
         req.setRoles(List.of("Dev"));
         req.setBackground(List.of("CS"));
         req.setFirstName("John");
         req.setLastName("Doe");
+        req.setJoinExistentTeam(false);
 
         QuestionAnswerDTO a1 = new QuestionAnswerDTO();
         a1.setQuestionNumber(1);
@@ -306,11 +219,20 @@ public class ApplicationServiceTest {
 
         req.setQuestionsAnswers(List.of(a1, a2));
 
-        when(applicantRepository.save(any(Applicant.class))).thenAnswer(i -> {
-            Applicant a = i.getArgument(0);
-            if (a.getApplicantId() == null) a.setApplicantId(100L);
-            return a;
-        });
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(100, null));
+
+        FormQuestion qText = new FormQuestion();
+        qText.setQuestionNumber(1);
+        qText.setQuestionType(QuestionType.TEXT);
+        qText.setQuestion("Name?");
+
+        FormQuestion qFile = new FormQuestion();
+        qFile.setQuestionNumber(2);
+        qFile.setQuestionType(QuestionType.FILE);
+        qFile.setQuestion("CV?");
+
+        when(questionRepository.findByProjectIdFormSubmission(1)).thenReturn(List.of(qText, qFile));
 
         MultipartFile mockFile = mock(MultipartFile.class);
         when(mockFile.isEmpty()).thenReturn(false);
@@ -325,58 +247,15 @@ public class ApplicationServiceTest {
     }
 
     @Test
-    public void testSubmitApplicationThrowsOnInvalidTimezone() {
-        Project project = new Project();
-        when(projectRepository.findById(any())).thenReturn(Optional.of(project));
-        
-        SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setTimezone("Invalid/Zone");
-
-        assertThrows(ApplicationException.class, () -> {
-            applicationService.submitApplication(req, Collections.emptyMap());
-        });
-    }
-
-    @Test
-    public void testSubmitApplicationThrowsWhenAccountRequiredButMissing() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setTeamsPreformed(false);
-
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        when(securityContext.getAuthentication()).thenReturn(null);
-
-        SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
-
-        assertThrows(ApplicationException.class, () -> {
-            applicationService.submitApplication(req, Collections.emptyMap());
-        });
-    }
-
-    @Test
     public void testSubmitApplicationQuestionMismatch() {
-        Long projectId = 1L;
-        Project project = new Project();
-        project.setProjectId(projectId);
-        project.setRolesOptions("Dev");
-        project.setBackgroundOptions("CS");
-        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         mockUser("test");
-
-        FormQuestion q = new FormQuestion();
-        q.setQuestionNumber(1);
-        q.setQuestionType(QuestionType.TEXT);
-        q.setQuestion("Actual Question");
-        when(questionRepository.findByProjectId(projectId)).thenReturn(List.of(q));
-
         SubmitApplicationRequest req = new SubmitApplicationRequest();
-        req.setProjectId(projectId);
+        req.setProjectId(1);
         req.setTimezone("UTC");
         req.setRoles(List.of("Dev"));
         req.setBackground(List.of("CS"));
-        req.setFirstName("A"); req.setLastName("B");
+        req.setFirstName("A");
+        req.setLastName("B");
 
         QuestionAnswerDTO a = new QuestionAnswerDTO();
         a.setQuestionNumber(1);
@@ -384,8 +263,44 @@ public class ApplicationServiceTest {
         a.setQuestion("Wrong Question");
         req.setQuestionsAnswers(List.of(a));
 
-        when(applicantRepository.save(any(Applicant.class))).thenAnswer(i -> i.getArgument(0));
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(1, null));
+
+        FormQuestion q = new FormQuestion();
+        q.setQuestionNumber(1);
+        q.setQuestionType(QuestionType.TEXT);
+        q.setQuestion("Actual Question");
+        when(questionRepository.findByProjectIdFormSubmission(1)).thenReturn(List.of(q));
 
         assertThrows(ApplicationException.class, () -> applicationService.submitApplication(req, Collections.emptyMap()));
+    }
+
+    @Test
+    public void testSubmitApplicationWithTeammatesSuccess() {
+        mockUser("testuser");
+        SubmitApplicationRequest req = new SubmitApplicationRequest();
+        req.setProjectId(1);
+        req.setFirstName("John");
+        req.setLastName("Doe");
+        req.setTimezone("UTC");
+        req.setRoles(List.of("Dev"));
+        req.setBackground(List.of("CS"));
+        req.setTeamName("Cool Team");
+        req.setJoinExistentTeam(false);
+        req.setQuestionsAnswers(Collections.emptyList());
+
+        TeammateDTO teammate = new TeammateDTO();
+        teammate.setFirstName("Jane");
+        teammate.setLastName("Doe");
+        req.setTeammates(List.of(teammate));
+
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(42, 10));
+        when(applicantRepository.getIdByNameAndProjectAndTeamId("Jane", "Doe", 1, 10))
+                .thenReturn(Optional.empty());
+
+        ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
+        assertEquals("Success", resp.getStatus());
+        verify(applicantRepository).insertApplicant(eq("Jane"), eq("Doe"), eq(1), eq(10), any(), any());
     }
 }

@@ -20,7 +20,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,19 +36,20 @@ public class ApplicationControllerTest {
 
     @Test
     public void testGetFormSuccess() {
+        // GetFormResponse(List<FormQuestionDTO>, List<String>, List<String>)
         GetFormResponse resp = new GetFormResponse(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-        when(applicationService.getFormForProject(1L)).thenReturn(resp);
+        when(applicationService.getFormForProject(1)).thenReturn(resp);
 
-        ResponseEntity<?> response = applicationController.getForm(1L);
+        ResponseEntity<?> response = applicationController.getForm(1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(resp, response.getBody());
     }
 
     @Test
     public void testGetFormNotFound() {
-        when(applicationService.getFormForProject(1L)).thenThrow(new RuntimeException("Not found"));
+        when(applicationService.getFormForProject(1)).thenThrow(new RuntimeException("Not found"));
 
-        ResponseEntity<?> response = applicationController.getForm(1L);
+        ResponseEntity<?> response = applicationController.getForm(1);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -58,12 +58,12 @@ public class ApplicationControllerTest {
         String json = "{}";
         SubmitApplicationRequest req = new SubmitApplicationRequest();
         ApplicationResponse appResp = new ApplicationResponse("Success", "Ok");
-        
+
         when(objectMapper.readValue(json, SubmitApplicationRequest.class)).thenReturn(req);
         when(applicationService.submitApplication(any(), any())).thenReturn(appResp);
 
         ResponseEntity<ApplicationResponse> response = applicationController.submitApplication(json, Collections.emptyMap());
-        
+
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals("Success", response.getBody().getStatus());
     }
@@ -73,7 +73,7 @@ public class ApplicationControllerTest {
         String json = "{}";
         SubmitApplicationRequest req = new SubmitApplicationRequest();
         ApplicationResponse appResp = new ApplicationResponse("Success", "Ok");
-        
+
         Map<String, MultipartFile> files = new HashMap<>();
         files.put("file_1", null);
 
@@ -81,7 +81,7 @@ public class ApplicationControllerTest {
         when(applicationService.submitApplication(any(), any())).thenReturn(appResp);
 
         ResponseEntity<ApplicationResponse> response = applicationController.submitApplication(json, files);
-        
+
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
@@ -103,7 +103,7 @@ public class ApplicationControllerTest {
         String json = "{}";
         SubmitApplicationRequest req = new SubmitApplicationRequest();
         ApplicationResponse appResp = new ApplicationResponse("Failure", "Exists", true);
-        
+
         when(objectMapper.readValue(json, SubmitApplicationRequest.class)).thenReturn(req);
         when(applicationService.submitApplication(any(), any())).thenReturn(appResp);
 

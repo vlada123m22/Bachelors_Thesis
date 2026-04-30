@@ -31,8 +31,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,40 +59,40 @@ public class TeamsFlowControllerTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn(username);
         User user = new User();
-        user.setId(1L);
+        user.setId(1);
         user.setUserName(username);
         when(userRepository.findByUserName(username)).thenReturn(Optional.of(user));
     }
 
-    private void mockProjectAndApplicant(Long projectId, Integer applicantId) {
+    private void mockProjectAndApplicant(Integer projectId, Integer applicantId) {
         Project project = new Project();
         project.setProjectId(projectId);
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         Applicant applicant = new Applicant();
         applicant.setApplicantId(applicantId);
-        when(applicantRepository.findByUserAndProject(any(), eq(project))).thenReturn(Optional.of(applicant));
+        when(applicantRepository.findIdByUserAndProject(any(), eq(project))).thenReturn(Optional.of(applicantId));
     }
 
     @Test
     public void testCreateTeamSuccess() {
         mockAuth("user");
-        mockProjectAndApplicant(1L, 10L);
-        CreateTeamRequest req = new CreateTeamRequest(1L, "title", "desc", Collections.emptyList(), Collections.emptyList());
-        
-        ResponseEntity<String> response = controller.createTeam(1L, req);
+        mockProjectAndApplicant(1, 10);
+        CreateTeamRequest req = new CreateTeamRequest(1, "title", "desc", Collections.emptyList(), Collections.emptyList());
+
+        ResponseEntity<String> response = controller.createTeam(1, req);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
     @Test
     public void testCreateTeamFailure() {
         mockAuth("user");
-        mockProjectAndApplicant(1L, 10L);
-        when(service.createTeam(anyLong(), anyLong(), any())).thenAnswer(invocation -> {
+        mockProjectAndApplicant(1, 10);
+        when(service.createTeam(anyInt(), anyInt(), any())).thenAnswer(invocation -> {
             throw new RuntimeException("Error");
         });
 
-        CreateTeamRequest req = new CreateTeamRequest(1L, "title", "desc", Collections.emptyList(), Collections.emptyList());
-        ResponseEntity<String> response = controller.createTeam(1L, req);
+        CreateTeamRequest req = new CreateTeamRequest(1, "title", "desc", Collections.emptyList(), Collections.emptyList());
+        ResponseEntity<String> response = controller.createTeam(1, req);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals("Error", response.getBody());
     }
@@ -101,16 +101,16 @@ public class TeamsFlowControllerTest {
     public void testDecideFailure() {
         mockAuth("user");
         Project project = new Project();
-        project.setProjectId(1L);
+        project.setProjectId(1);
         Team team = new Team();
         team.setProject(project);
-        when(teamRepository.findById(100L)).thenReturn(Optional.of(team));
-        mockProjectAndApplicant(1L, 10L);
+        when(teamRepository.findById(100)).thenReturn(Optional.of(team));
+        mockProjectAndApplicant(1, 10);
         doAnswer(invocation -> {
             throw new RuntimeException("Decision Error");
-        }).when(service).decideApplication(anyLong(), anyLong(), anyLong(), any());
+        }).when(service).decideApplication(anyInt(), anyInt(), anyInt(), any());
 
-        ResponseEntity<String> response = controller.decide(100L, 200L, new DecisionRequest("ACCEPT", null, null));
+        ResponseEntity<String> response = controller.decide(100, 200, new DecisionRequest("ACCEPT", null, null));
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals("Decision Error", response.getBody());
     }
@@ -119,28 +119,28 @@ public class TeamsFlowControllerTest {
     public void testApply() {
         mockAuth("user");
         Project project = new Project();
-        project.setProjectId(1L);
+        project.setProjectId(1);
         Team team = new Team();
         team.setProject(project);
-        when(teamRepository.findById(100L)).thenReturn(Optional.of(team));
-        mockProjectAndApplicant(1L, 10L);
+        when(teamRepository.findById(100)).thenReturn(Optional.of(team));
+        mockProjectAndApplicant(1, 10);
 
-        ResponseEntity<Void> response = controller.apply(100L);
+        ResponseEntity<Void> response = controller.apply(100);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        verify(service).applyToTeam(100L, 10L);
+        verify(service).applyToTeam(100, 10);
     }
 
     @Test
     public void testDecide() {
         mockAuth("user");
         Project project = new Project();
-        project.setProjectId(1L);
+        project.setProjectId(1);
         Team team = new Team();
         team.setProject(project);
-        when(teamRepository.findById(100L)).thenReturn(Optional.of(team));
-        mockProjectAndApplicant(1L, 10L);
+        when(teamRepository.findById(100)).thenReturn(Optional.of(team));
+        mockProjectAndApplicant(1, 10);
 
-        ResponseEntity<String> response = controller.decide(100L, 200L, new DecisionRequest("ACCEPT", null, null));
+        ResponseEntity<String> response = controller.decide(100, 200, new DecisionRequest("ACCEPT", null, null));
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 
@@ -148,14 +148,14 @@ public class TeamsFlowControllerTest {
     public void testGetTeamApplications() {
         mockAuth("user");
         Project project = new Project();
-        project.setProjectId(1L);
+        project.setProjectId(1);
         Team team = new Team();
         team.setProject(project);
-        when(teamRepository.findById(100L)).thenReturn(Optional.of(team));
-        mockProjectAndApplicant(1L, 10L);
-        when(service.getTeamApplications(anyLong(), anyLong())).thenReturn(Collections.emptyList());
+        when(teamRepository.findById(100)).thenReturn(Optional.of(team));
+        mockProjectAndApplicant(1, 10);
+        when(service.getTeamApplications(anyInt(), anyInt())).thenReturn(Collections.emptyList());
 
-        ResponseEntity<List<TeamApplicationDTO>> response = controller.getTeamApplications(100L);
+        ResponseEntity<List<TeamApplicationDTO>> response = controller.getTeamApplications(100);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
@@ -163,13 +163,13 @@ public class TeamsFlowControllerTest {
     public void testKick() {
         mockAuth("user");
         Project project = new Project();
-        project.setProjectId(1L);
+        project.setProjectId(1);
         Team team = new Team();
         team.setProject(project);
-        when(teamRepository.findById(100L)).thenReturn(Optional.of(team));
-        mockProjectAndApplicant(1L, 10L);
+        when(teamRepository.findById(100)).thenReturn(Optional.of(team));
+        mockProjectAndApplicant(1, 10);
 
-        ResponseEntity<Void> response = controller.kick(100L, 500L);
+        ResponseEntity<Void> response = controller.kick(100, 500);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
@@ -177,20 +177,20 @@ public class TeamsFlowControllerTest {
     public void testLeave() {
         mockAuth("user");
         Project project = new Project();
-        project.setProjectId(1L);
+        project.setProjectId(1);
         Team team = new Team();
         team.setProject(project);
-        when(teamRepository.findById(100L)).thenReturn(Optional.of(team));
-        mockProjectAndApplicant(1L, 10L);
+        when(teamRepository.findById(100)).thenReturn(Optional.of(team));
+        mockProjectAndApplicant(1, 10);
 
-        ResponseEntity<Void> response = controller.leave(100L, 500L);
+        ResponseEntity<Void> response = controller.leave(100, 500);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     public void testList() {
-        when(service.listTeams(1L)).thenReturn(Collections.emptyList());
-        ResponseEntity<List<TeamListingDTO>> response = controller.list(1L);
+        when(service.listTeams(1)).thenReturn(Collections.emptyList());
+        ResponseEntity<List<TeamListingDTO>> response = controller.list(1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 }
