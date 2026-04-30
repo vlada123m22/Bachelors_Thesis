@@ -19,14 +19,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class JwtServiceTest {
 
-    @Mock
-    private JwtConfig jwtConfig;
+    @Mock private JwtConfig jwtConfig;
 
     @InjectMocks
     private JwtService jwtService;
 
     private final String secret = "myVeryLongSecretKeyThatIsAtLeast32BytesLong";
-    private final long expiration = 3600000; // 1 hour
+    private final long expiration = 3600000;
 
     @BeforeEach
     public void setup() {
@@ -38,10 +37,10 @@ public class JwtServiceTest {
     public void testGenerateAndExtractUsername() {
         String username = "testuser";
         Set<Role> roles = Collections.emptySet();
-        
+
         String token = jwtService.generateToken(username, roles);
         assertNotNull(token);
-        
+
         String extracted = jwtService.extractUsername(token);
         assertEquals(username, extracted);
     }
@@ -64,7 +63,7 @@ public class JwtServiceTest {
 
     @Test
     public void testExpiredToken() {
-        ReflectionTestUtils.setField(jwtService, "EXPIRATION_TIME", -1000L); // Already expired
+        ReflectionTestUtils.setField(jwtService, "EXPIRATION_TIME", -1000L);
         String token = jwtService.generateToken("user", Collections.emptySet());
         assertFalse(jwtService.validateToken(token));
     }

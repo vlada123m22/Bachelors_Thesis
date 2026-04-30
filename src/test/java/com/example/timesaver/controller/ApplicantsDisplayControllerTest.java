@@ -19,7 +19,8 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,33 +38,33 @@ public class ApplicantsDisplayControllerTest {
     @Test
     public void testDisplayTeamsSuccess() {
         GetTeamsDTO dto = new GetTeamsDTO(Collections.emptyList(), Collections.emptyList());
-        when(displayService.getTeams(1L)).thenReturn(dto);
+        when(displayService.getTeams(1)).thenReturn(dto);
 
-        ResponseEntity<GetTeamsDTO> response = controller.displayTeams(1L);
+        ResponseEntity<GetTeamsDTO> response = controller.displayTeams(1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(dto, response.getBody());
     }
 
     @Test
     public void testDisplayTeamsFailure() {
-        when(displayService.getTeams(1L)).thenThrow(new RuntimeException("Error"));
-        ResponseEntity<GetTeamsDTO> response = controller.displayTeams(1L);
+        when(displayService.getTeams(1)).thenThrow(new RuntimeException("Error"));
+        ResponseEntity<GetTeamsDTO> response = controller.displayTeams(1);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test
     public void testDisplayApplicantsSuccess() {
         GetParticipantsDTO dto = new GetParticipantsDTO(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-        when(displayService.getParticipants(1L)).thenReturn(dto);
+        when(displayService.getParticipants(1)).thenReturn(dto);
 
-        ResponseEntity<GetParticipantsDTO> response = controller.displayApplicants(1L);
+        ResponseEntity<GetParticipantsDTO> response = controller.displayApplicants(1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     public void testDisplayApplicantsFailure() {
-        when(displayService.getParticipants(1L)).thenThrow(new RuntimeException("Error"));
-        ResponseEntity<GetParticipantsDTO> response = controller.displayApplicants(1L);
+        when(displayService.getParticipants(1)).thenThrow(new RuntimeException("Error"));
+        ResponseEntity<GetParticipantsDTO> response = controller.displayApplicants(1);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
@@ -71,33 +72,33 @@ public class ApplicantsDisplayControllerTest {
     public void testUpdateSelectionSuccess() {
         UpdateSelectionRequest req = new UpdateSelectionRequest();
         req.setSelected(true);
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1L, 10L, req);
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1, 10, req);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(selectionService).setApplicantSelection(1L, 10L, true);
+        verify(selectionService).setApplicantSelection(1, 10, true);
     }
 
     @Test
     public void testUpdateSelectionSecurityError() {
-        doThrow(new SecurityException("Denied")).when(selectionService).setApplicantSelection(anyLong(), anyLong(), anyBoolean());
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1L, 10L, new UpdateSelectionRequest());
+        doThrow(new SecurityException("Denied")).when(selectionService).setApplicantSelection(anyInt(), anyInt(), anyBoolean());
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1, 10, new UpdateSelectionRequest());
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
     @Test
     public void testUpdateSelectionIllegalArgument() {
-        doThrow(new IllegalArgumentException("Invalid")).when(selectionService).setApplicantSelection(anyLong(), anyLong(), anyBoolean());
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1L, 10L, new UpdateSelectionRequest());
+        doThrow(new IllegalArgumentException("Invalid")).when(selectionService).setApplicantSelection(anyInt(), anyInt(), anyBoolean());
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1, 10, new UpdateSelectionRequest());
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
     public void testUpdateSelectionUnexpectedError() {
-        doThrow(new RuntimeException("Oops")).when(selectionService).setApplicantSelection(anyLong(), anyLong(), anyBoolean());
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1L, 10L, new UpdateSelectionRequest());
+        doThrow(new RuntimeException("Oops")).when(selectionService).setApplicantSelection(anyInt(), anyInt(), anyBoolean());
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.updateSelection(1, 10, new UpdateSelectionRequest());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
@@ -106,35 +107,35 @@ public class ApplicantsDisplayControllerTest {
         BulkUpdateSelectionRequest req = new BulkUpdateSelectionRequest();
         req.setSelected(true);
         req.setApplicantIds(Collections.emptyList());
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1L, req);
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1, req);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     public void testBulkUpdateSelectionSecurityError() {
-        when(selectionService.bulkSetSelection(anyLong(), any(), anyBoolean()))
+        when(selectionService.bulkSetSelection(anyInt(), any(), anyBoolean()))
                 .thenThrow(new SecurityException("Denied"));
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1L, new BulkUpdateSelectionRequest());
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1, new BulkUpdateSelectionRequest());
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
     @Test
     public void testBulkUpdateSelectionIllegalArgument() {
-        when(selectionService.bulkSetSelection(anyLong(), any(), anyBoolean()))
+        when(selectionService.bulkSetSelection(anyInt(), any(), anyBoolean()))
                 .thenThrow(new IllegalArgumentException("Invalid"));
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1L, new BulkUpdateSelectionRequest());
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1, new BulkUpdateSelectionRequest());
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
     public void testBulkUpdateSelectionUnexpectedError() {
-        when(selectionService.bulkSetSelection(anyLong(), any(), anyBoolean()))
+        when(selectionService.bulkSetSelection(anyInt(), any(), anyBoolean()))
                 .thenThrow(new RuntimeException("Oops"));
-        
-        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1L, new BulkUpdateSelectionRequest());
+
+        ResponseEntity<UpdateSelectionResponse> response = controller.bulkUpdateSelection(1, new BulkUpdateSelectionRequest());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }

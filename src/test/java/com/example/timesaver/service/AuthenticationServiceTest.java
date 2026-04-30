@@ -27,12 +27,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private BCryptPasswordEncoder encoder;
-    @Mock
-    private JwtService jwtService;
+    @Mock private UserRepository userRepository;
+    @Mock private BCryptPasswordEncoder encoder;
+    @Mock private JwtService jwtService;
+    @Mock private UserService userService;
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -42,7 +40,8 @@ public class AuthenticationServiceTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        
+        req.setEmail("email@test.com");
+
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
         when(encoder.encode("pass")).thenReturn("encoded");
 
@@ -56,7 +55,7 @@ public class AuthenticationServiceTest {
     public void testRegisterOrganizerDuplicateUsername() {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
-        
+
         when(userRepository.findByUserName("user")).thenReturn(Optional.of(new User()));
 
         SignUpResponse resp = authenticationService.registerOrganizer(req);
@@ -70,7 +69,7 @@ public class AuthenticationServiceTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        
+
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
 
         SignUpResponse resp = authenticationService.registerParticipant(req);
@@ -82,7 +81,7 @@ public class AuthenticationServiceTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        
+
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
 
         SignUpResponse resp = authenticationService.registerAdmin(req);
@@ -94,7 +93,8 @@ public class AuthenticationServiceTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        
+        req.setEmail("email@test.com");
+
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
 
         SignUpResponse resp = authenticationService.registerMentor(req);
@@ -106,7 +106,7 @@ public class AuthenticationServiceTest {
         LoginRequest req = new LoginRequest();
         req.setUserName("user");
         req.setPassword("pass");
-        
+
         User user = new User();
         user.setUserName("user");
         user.setPassword("encoded");
@@ -127,7 +127,7 @@ public class AuthenticationServiceTest {
     public void testLoginUserNotFound() {
         LoginRequest req = new LoginRequest();
         req.setUserName("user");
-        
+
         when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
 
         ResponseEntity<LoginResponse> resp = authenticationService.login(req);
@@ -153,21 +153,6 @@ public class AuthenticationServiceTest {
         assertEquals("Incorrect password", resp.getBody().getErrorMessage());
     }
 
-//    @Test
-//    public void testRegisterOrganizerDuplicateEmail() {
-//        SignUpRequest req = new SignUpRequest();
-//        req.setUserName("user");
-//        req.setEmail("duplicate@test.com");
-//
-//        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-//        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
-//
-//        SignUpResponse resp = authenticationService.registerOrganizer(req);
-//
-//        assertFalse(resp.isCreated());
-//        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
-//    }
-
     @Test
     public void testRegisterParticipantDuplicateUsername() {
         SignUpRequest req = new SignUpRequest();
@@ -180,21 +165,6 @@ public class AuthenticationServiceTest {
         assertFalse(resp.isCreated());
         assertEquals("The username already exists. Please choose another username", resp.getErrorMessage());
     }
-
-//    @Test
-//    public void testRegisterParticipantDuplicateEmail() {
-//        SignUpRequest req = new SignUpRequest();
-//        req.setUserName("user");
-//        req.setEmail("duplicate@test.com");
-//
-//        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-//        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
-//
-//        SignUpResponse resp = authenticationService.registerParticipant(req);
-//
-//        assertFalse(resp.isCreated());
-//        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
-//    }
 
     @Test
     public void testRegisterAdminDuplicateUsername() {
@@ -222,18 +192,34 @@ public class AuthenticationServiceTest {
         assertEquals("The username already exists. Please choose another username", resp.getErrorMessage());
     }
 
-//    @Test
-//    public void testRegisterMentorDuplicateEmail() {
-//        SignUpRequest req = new SignUpRequest();
-//        req.setUserName("user");
-//        req.setEmail("duplicate@test.com");
-//
-//        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
-//        when(userRepository.findUserByEmail("duplicate@test.com")).thenReturn(Optional.of(new User()));
-//
-//        SignUpResponse resp = authenticationService.registerMentor(req);
-//
-//        assertFalse(resp.isCreated());
-//        assertEquals("The email already exists. Please choose another email", resp.getErrorMessage());
-//    }
+    @Test
+    public void testChangePasswordSuccess() {
+        User user = new User();
+        user.setPassword("encoded");
+        when(userRepository.findByUserName("user")).thenReturn(Optional.of(user));
+        when(encoder.matches("old", "encoded")).thenReturn(true);
+        when(encoder.encode("new")).thenReturn("newEncoded");
+
+        ResponseEntity<String> resp = authenticationService.changePassword("user", "old", "new");
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    public void testChangePasswordUserNotFound() {
+        when(userRepository.findByUserName("user")).thenReturn(Optional.empty());
+        ResponseEntity<String> resp = authenticationService.changePassword("user", "old", "new");
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+    }
+
+    @Test
+    public void testChangePasswordWrongOldPassword() {
+        User user = new User();
+        user.setPassword("encoded");
+        when(userRepository.findByUserName("user")).thenReturn(Optional.of(user));
+        when(encoder.matches("wrong", "encoded")).thenReturn(false);
+
+        ResponseEntity<String> resp = authenticationService.changePassword("user", "wrong", "new");
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+    }
 }

@@ -25,16 +25,11 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ApplicantSelectionServiceTest {
 
-    @Mock
-    private ApplicantRepository applicantRepository;
-    @Mock
-    private ProjectRepository projectRepository;
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private SecurityContext securityContext;
-    @Mock
-    private Authentication authentication;
+    @Mock private ApplicantRepository applicantRepository;
+    @Mock private ProjectRepository projectRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private SecurityContext securityContext;
+    @Mock private Authentication authentication;
 
     @InjectMocks
     private ApplicantSelectionService applicantSelectionService;
@@ -56,12 +51,11 @@ public class ApplicantSelectionServiceTest {
 
     @Test
     public void testSetApplicantSelectionSuccess() {
-        Long projectId = 1L;
-        Long applicantId = 2L;
-        Long userId = 3L;
-        String username = "organizer";
+        Integer projectId = 1;
+        Integer applicantId = 2;
+        Integer userId = 3;
 
-        mockUser(username, userId);
+        mockUser("organizer", userId);
 
         Project project = new Project();
         project.setProjectId(projectId);
@@ -84,9 +78,9 @@ public class ApplicantSelectionServiceTest {
 
     @Test
     public void testSetApplicantSelectionThrowsWhenNotOrganizer() {
-        Long projectId = 1L;
-        Long userId = 3L;
-        mockUser("other", 4L);
+        Integer projectId = 1;
+        Integer userId = 3;
+        mockUser("other", 4);
 
         Project project = new Project();
         project.setProjectId(projectId);
@@ -96,15 +90,14 @@ public class ApplicantSelectionServiceTest {
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
 
-        assertThrows(SecurityException.class, () -> {
-            applicantSelectionService.setApplicantSelection(projectId, 2L, true);
-        });
+        assertThrows(SecurityException.class, () ->
+                applicantSelectionService.setApplicantSelection(projectId, 2, true));
     }
 
     @Test
     public void testBulkSetSelectionSuccess() {
-        Long projectId = 1L;
-        Long userId = 3L;
+        Integer projectId = 1;
+        Integer userId = 3;
         mockUser("organizer", userId);
 
         Project project = new Project();
@@ -121,7 +114,7 @@ public class ApplicantSelectionServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(applicantRepository.findAllById(any())).thenReturn(List.of(a1, a2));
 
-        int updated = applicantSelectionService.bulkSetSelection(projectId, List.of(10L, 11L), true);
+        int updated = applicantSelectionService.bulkSetSelection(projectId, List.of(10, 11), true);
 
         assertEquals(2, updated);
         assertTrue(a1.getIsSelected());
@@ -131,17 +124,17 @@ public class ApplicantSelectionServiceTest {
 
     @Test
     public void testBulkSetSelectionThrowsWhenWrongProject() {
-        Long projectId = 1L;
-        mockUser("organizer", 3L);
+        Integer projectId = 1;
+        mockUser("organizer", 3);
 
         Project project = new Project();
         project.setProjectId(projectId);
         User organizer = new User();
-        organizer.setId(3L);
+        organizer.setId(3);
         project.setOrganizer(organizer);
 
         Project otherProject = new Project();
-        otherProject.setProjectId(99L);
+        otherProject.setProjectId(99);
 
         Applicant a1 = new Applicant();
         a1.setProject(otherProject);
@@ -149,44 +142,40 @@ public class ApplicantSelectionServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(applicantRepository.findAllById(any())).thenReturn(List.of(a1));
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            applicantSelectionService.bulkSetSelection(projectId, List.of(10L), true);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+                applicantSelectionService.bulkSetSelection(projectId, List.of(10), true));
     }
 
     @Test
     public void testGetCurrentUserReturnsNullWhenNotAuthenticated() {
         when(securityContext.getAuthentication()).thenReturn(null);
-        Long projectId = 1L;
+        Integer projectId = 1;
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
-        assertThrows(SecurityException.class, () -> {
-            applicantSelectionService.setApplicantSelection(projectId, 2L, true);
-        });
+        assertThrows(SecurityException.class, () ->
+                applicantSelectionService.setApplicantSelection(projectId, 2, true));
     }
 
     @Test
     public void testGetCurrentUserReturnsNullWhenAuthenticationNotAuthenticated() {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(false);
-        Long projectId = 1L;
+        Integer projectId = 1;
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
-        assertThrows(SecurityException.class, () -> {
-            applicantSelectionService.setApplicantSelection(projectId, 2L, true);
-        });
+        assertThrows(SecurityException.class, () ->
+                applicantSelectionService.setApplicantSelection(projectId, 2, true));
     }
 
     @Test
     public void testProjectNotFound() {
-        when(projectRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> {
-            applicantSelectionService.setApplicantSelection(1L, 2L, true);
-        });
+        when(projectRepository.findById(1)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () ->
+                applicantSelectionService.setApplicantSelection(1, 2, true));
     }
 
     @Test
     public void testApplicantNotFound() {
-        Long projectId = 1L;
-        Long userId = 3L;
+        Integer projectId = 1;
+        Integer userId = 3;
         mockUser("organizer", userId);
 
         Project project = new Project();
@@ -196,18 +185,17 @@ public class ApplicantSelectionServiceTest {
         project.setOrganizer(organizer);
 
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-        when(applicantRepository.findById(2L)).thenReturn(Optional.empty());
+        when(applicantRepository.findById(2)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            applicantSelectionService.setApplicantSelection(projectId, 2L, true);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+                applicantSelectionService.setApplicantSelection(projectId, 2, true));
     }
 
     @Test
     public void testApplicantBelongsToWrongProject() {
-        Long projectId = 1L;
-        Long applicantId = 2L;
-        Long userId = 3L;
+        Integer projectId = 1;
+        Integer applicantId = 2;
+        Integer userId = 3;
         mockUser("organizer", userId);
 
         Project project = new Project();
@@ -217,7 +205,7 @@ public class ApplicantSelectionServiceTest {
         project.setOrganizer(organizer);
 
         Project otherProject = new Project();
-        otherProject.setProjectId(99L);
+        otherProject.setProjectId(99);
 
         Applicant applicant = new Applicant();
         applicant.setApplicantId(applicantId);
@@ -226,16 +214,15 @@ public class ApplicantSelectionServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(applicantRepository.findById(applicantId)).thenReturn(Optional.of(applicant));
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            applicantSelectionService.setApplicantSelection(projectId, applicantId, true);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+                applicantSelectionService.setApplicantSelection(projectId, applicantId, true));
     }
 
     @Test
     public void testSetApplicantSelectionToFalse() {
-        Long projectId = 1L;
-        Long applicantId = 2L;
-        Long userId = 3L;
+        Integer projectId = 1;
+        Integer applicantId = 2;
+        Integer userId = 3;
         mockUser("organizer", userId);
 
         Project project = new Project();
@@ -260,8 +247,8 @@ public class ApplicantSelectionServiceTest {
 
     @Test
     public void testBulkSetSelectionToFalse() {
-        Long projectId = 1L;
-        Long userId = 3L;
+        Integer projectId = 1;
+        Integer userId = 3;
         mockUser("organizer", userId);
 
         Project project = new Project();
@@ -277,7 +264,7 @@ public class ApplicantSelectionServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(applicantRepository.findAllById(any())).thenReturn(List.of(a1));
 
-        int updated = applicantSelectionService.bulkSetSelection(projectId, List.of(10L), false);
+        int updated = applicantSelectionService.bulkSetSelection(projectId, List.of(10), false);
 
         assertEquals(1, updated);
         assertFalse(a1.getIsSelected());

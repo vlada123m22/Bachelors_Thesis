@@ -31,11 +31,11 @@ public class AuthenticationControllerTest {
         SignUpRequest req = new SignUpRequest();
         req.setUserName("user");
         SignUpResponse resp = new SignUpResponse(true, null);
-        
+
         when(authService.registerOrganizer(any())).thenReturn(resp);
 
         ResponseEntity<SignUpResponse> response = authenticationController.signUpOrganizer(req);
-        
+
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertTrue(response.getBody().isCreated());
     }
@@ -44,11 +44,11 @@ public class AuthenticationControllerTest {
     public void testSignUpOrganizerConflict() {
         SignUpRequest req = new SignUpRequest();
         SignUpResponse resp = new SignUpResponse(false, "The username already exists. Please choose another username");
-        
+
         when(authService.registerOrganizer(any())).thenReturn(resp);
 
         ResponseEntity<SignUpResponse> response = authenticationController.signUpOrganizer(req);
-        
+
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
 
@@ -135,11 +135,9 @@ public class AuthenticationControllerTest {
     public void testSignUpOrganizerEmailConflict() {
         SignUpRequest req = new SignUpRequest();
         SignUpResponse resp = new SignUpResponse(false, "The email already exists. Please choose another email");
-
         when(authService.registerOrganizer(any())).thenReturn(resp);
 
         ResponseEntity<SignUpResponse> response = authenticationController.signUpOrganizer(req);
-
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
 
@@ -170,6 +168,7 @@ public class AuthenticationControllerTest {
         when(authService.registerParticipant(any())).thenReturn(resp);
 
         ResponseEntity<SignUpResponse> response = authenticationController.signUpParticipant(req);
+        // The controller only checks for the specific username conflict message
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
     }
 }

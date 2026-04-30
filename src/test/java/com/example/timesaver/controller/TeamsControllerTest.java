@@ -24,15 +24,15 @@ public class TeamsControllerTest {
 
     @Test
     public void testCreateProjectSuccess() {
-        ResponseEntity<Void> response = teamsController.createProject(1L);
+        ResponseEntity<Void> response = teamsController.createProject(1);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        verify(teamService).createTeams(1L);
+        verify(teamService).createTeams(1);
     }
 
     @Test
     public void testCreateProjectFailure() {
-        doThrow(new RuntimeException("Error")).when(teamService).createTeams(1L);
-        ResponseEntity<Void> response = teamsController.createProject(1L);
+        doThrow(new RuntimeException("Error")).when(teamService).createTeams(1);
+        ResponseEntity<Void> response = teamsController.createProject(1);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }

@@ -5,7 +5,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15
-    container_name: platform_postgres
+    container_name: c_postgres
     restart: always
     environment:
       POSTGRES_DB: platformdb
