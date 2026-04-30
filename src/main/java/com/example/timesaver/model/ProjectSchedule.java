@@ -11,7 +11,7 @@ public class ProjectSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "schedule_id")
-    private Long scheduleId;
+    private Integer scheduleId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)

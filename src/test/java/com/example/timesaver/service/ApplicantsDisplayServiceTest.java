@@ -75,16 +75,14 @@ public class ApplicantsDisplayServiceTest {
         QuestionDTO qDto = new QuestionDTO(1, "Question?");
         when(questionRepository.findQuestionByProjectId(projectId)).thenReturn(List.of(qDto));
 
-        Applicant a1 = new Applicant();
+        GetParticipantsHelperDTO a1 = new GetParticipantsHelperDTO();
         a1.setApplicantId(100L);
         a1.setFirstName("John");
         a1.setLastName("Doe");
-        Team t1 = new Team();
-        t1.setTeamName("Team A");
-        a1.setTeam(t1);
+        a1.setTeamName("Team A");
         a1.setIsSelected(true);
 
-        Applicant a2 = new Applicant();
+        GetParticipantsHelperDTO a2 = new GetParticipantsHelperDTO();
         a2.setApplicantId(101L);
         a2.setFirstName("Jane");
         a2.setLastName("Smith");

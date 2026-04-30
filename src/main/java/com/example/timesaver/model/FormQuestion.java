@@ -1,19 +1,23 @@
 package com.example.timesaver.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "form_questions")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class FormQuestion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "question_id")
-    private Long questionId;
+    private Integer questionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
@@ -38,6 +42,23 @@ public class FormQuestion {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+
+
+    public FormQuestion(Integer questionId, Integer questionNumber, QuestionType questionType, String question) {
+        this.questionId = questionId;
+        this.questionNumber = questionNumber;
+        this.questionType = questionType;
+        this.question = question;
+    }
+
+    public FormQuestion( Integer questionNumber, QuestionType questionType, String question, String checkboxOptions) {
+        this.questionNumber = questionNumber;
+        this.questionType = questionType;
+        this.question = question;
+        this.checkboxOptions = checkboxOptions;
+    }
+
 
     @PrePersist
     protected void onCreate() {

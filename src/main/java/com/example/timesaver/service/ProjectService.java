@@ -1,5 +1,7 @@
 package com.example.timesaver.service;
 
+import com.example.timesaver.model.dto.project.ProjectDashboardDTO;
+
 import com.example.timesaver.model.*;
 import com.example.timesaver.model.dto.project.*;
 import com.example.timesaver.repository.*;
@@ -93,7 +95,7 @@ public class ProjectService {
     }
 
     @Transactional(readOnly = true)
-    public GetProjectResponse getProject(Long projectId, String userTimezone) {
+    public GetProjectResponse getProject(Integer projectId, String userTimezone) {
         try {
 
             ZoneId zone = ZoneId.of(userTimezone);
@@ -111,7 +113,7 @@ public class ProjectService {
 //            }
 
             // Convert to DTO
-            List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectId(projectId).stream()
+            List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectIdFormRetrieval(projectId).stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
 
@@ -153,7 +155,10 @@ public class ProjectService {
 
             Project project = projectOpt.get();
 
+
+
             // Check if user is the organizer
+            //TODO only id needed in the query
             if (!project.getOrganizer().getId().equals(organizer.getId())) {
                 responseBody = new ProjectResponse("Failure", "You don't have permission to edit this project");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseBody);
@@ -199,12 +204,7 @@ public class ProjectService {
 
         projectRepository.save(project);
 
-
-
-            questionRepository.deleteQuestions(project.getProjectId());
-            saveQuestions(request.getFormQuestions(), project);
-
-        // Clear old questions and save new ones
+        // Clear old questions and save new ones (the foreign key on question_answers does not allow deleting questions that already have answers)
         questionRepository.deleteQuestions(project.getProjectId());
         saveQuestions(request.getFormQuestions(), project);
         
@@ -215,23 +215,29 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectResponse deleteProject(Long projectId) {
+    public ProjectResponse deleteProject(Integer projectId) {
         try {
             // Get current authenticated user
-            User organizer = getCurrentUser();
-            if (organizer == null) {
+            Integer organizerId = getCurrentUser().getId();
+
+            if (organizerId == null) {
                 return new ProjectResponse("Failure", "User not authenticated");
             }
 
+            String deletionResult = projectRepository.deleteProjectById(projectId, organizerId).get();
+
             // Check if project exists and belongs to organizer
-            if (!projectRepository.existsByProjectIdAndOrganizer(projectId, organizer)) {
+            if (deletionResult.equals("Project Not Found")) {
                 return new ProjectResponse("Failure", "Project not found or you don't have permission to delete it");
+            } else if (deletionResult.equals("Success")) {
+                // Delete project (cascade will delete form questions)
+                projectRepository.deleteById(projectId);
+
+                return new ProjectResponse("Success", "Project deleted successfully");
+            } else {
+                return new ProjectResponse("Failure", deletionResult);
             }
 
-            // Delete project (cascade will delete form questions)
-            projectRepository.deleteById(projectId);
-
-            return new ProjectResponse("Success", "Project deleted successfully");
 
         } catch (Exception e) {
             return new ProjectResponse("Failure", "An error occurred while deleting the project: " + e.getMessage());
@@ -247,29 +253,7 @@ public class ProjectService {
                 throw new RuntimeException("User not authenticated");
             }
 
-            // Get all projects by organizer
-            List<Project> projects = projectRepository.findByOrganizer(organizer);
-
-            // Convert to DTOs
-            return projects.stream()
-                    .map(project -> {
-                        List<FormQuestionDTO> questionDTOs = questionRepository.findByProjectId(project.getProjectId()).stream()
-                                .map(this::convertToDTO)
-                                .collect(Collectors.toList());
-
-                        return new GetProjectResponse(
-                                project.getProjectId(),
-                                project.getProjectName(),
-                                project.getProjectDescription(),
-                                project.getStartDate(),
-                                project.getEndDate(),
-                                project.getMaxNrParticipants(),
-                                project.getMinNrParticipants(),
-                                questionDTOs
-
-                        );
-                    })
-                    .collect(Collectors.toList());
+            return projectRepository.findMainProjInfoByOrganizer(organizer);
 
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
@@ -346,22 +330,22 @@ public class ProjectService {
         if (user == null) return false;
         if (project.getOrganizer().getId().equals(user.getId())) return true;
 
-        Optional<Applicant> applicantOpt = applicantRepository.findByUserAndProject(user, project);
+        Optional<Boolean> applicantOpt = applicantRepository.getIsSelectedByUserAndProject(user, project);
         if (applicantOpt.isEmpty()) return false;
 
         if (visibility == ScheduleVisibility.APPLICANTS) return true;
         if (visibility == ScheduleVisibility.ACCEPTED_PARTICIPANTS) {
-            return applicantOpt.get().getIsSelected();
+            return applicantOpt.get();
         }
         return false;
     }
 
 
-    public Project getProjectById(Long projectId) {
+    public Project getProjectById(Integer projectId) {
         return projectRepository.findById(projectId).orElseThrow(() -> new RuntimeException("Project not found"));
     }
 
-    public List<ScheduleDTO> getScheduleByDay(Long projectId, Integer dayNumber) {
+    public List<ScheduleDTO> getScheduleByDay(Integer projectId, Integer dayNumber) {
         List<ProjectSchedule> projectScheduleList = scheduleRepository.findByProjectProjectIdAndDayNumber(projectId, dayNumber);
         List<ScheduleDTO> scheduleDTOs = new ArrayList<>();
         for(ProjectSchedule schedule : projectScheduleList){
@@ -391,5 +375,10 @@ public class ProjectService {
         }).collect(Collectors.toList());
 
         scheduleRepository.saveAll(schedules);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProjectDashboardDTO> getFutureProjects() {
+        return projectRepository.findFutureProjects();
     }
 }

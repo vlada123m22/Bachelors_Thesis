@@ -26,7 +26,7 @@ public class AssignmentService {
     private ApplicantRepository applicantRepository;
 
 
-    public Submission submitAssignment(Long assignmentId, String username, String text, MultipartFile file) throws IOException {
+    public Submission submitAssignment(Integer assignmentId, String username, String text, MultipartFile file) throws IOException {
         User user = userRepository.findByUserName(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -63,11 +63,11 @@ public class AssignmentService {
         return assignmentRepository.save(assignment);
     }
 
-    public List<Assignment> getAssignmentsByProject(Long projectId) {
+    public List<Assignment> getAssignmentsByProject(Integer projectId) {
         return assignmentRepository.findByProjectProjectId(projectId);
     }
 
-    public Submission submitAssignment(Long assignmentId, Team team, User user, String text, MultipartFile file) throws IOException {
+    public Submission submitAssignment(Integer assignmentId, Team team, User user, String text, MultipartFile file) throws IOException {
         Submission submission = submissionRepository.findByAssignmentIdAndTeamTeamId(assignmentId, team.getTeamId())
                 .orElse(new Submission());
 
@@ -84,7 +84,7 @@ public class AssignmentService {
         return submissionRepository.save(submission);
     }
 
-    public Submission getTeamSubmission(Long assignmentId, String username) {
+    public Submission getTeamSubmission(Integer assignmentId, String username) {
         User user = userRepository.findByUserName(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -105,7 +105,7 @@ public class AssignmentService {
     }
 
 
-    public List<Submission> getAllSubmissionsForAssignment(Long assignmentId) {
+    public List<Submission> getAllSubmissionsForAssignment(Integer assignmentId) {
         // Check if assignment exists
         if (!assignmentRepository.existsById(assignmentId)) {
             throw new RuntimeException("Assignment not found");

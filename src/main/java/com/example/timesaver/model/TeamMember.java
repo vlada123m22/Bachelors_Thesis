@@ -8,8 +8,9 @@ import java.time.ZonedDateTime;
 @Table(name = "team_members", uniqueConstraints = @UniqueConstraint(columnNames = {"team_id", "applicant_id"}))
 @Data
 public class TeamMember {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer teamMemberId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)

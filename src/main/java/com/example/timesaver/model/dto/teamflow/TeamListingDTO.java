@@ -3,13 +3,13 @@ package com.example.timesaver.model.dto.teamflow;
 import java.util.List;
 
 public record TeamListingDTO(
-        Long teamId,
+        Integer teamId,
         String teamName,
         String ideaTitle,
-        Long leadApplicantId,
-        int size,
-        int maxSize,
-        int spotsLeft,
+        Integer leadApplicantId,
+        Integer size,
+        Integer maxSize,
+        Integer spotsLeft,
         List<ReqWithCounts> roles,
         List<ReqWithCounts> backgrounds
 ) {

@@ -5,7 +5,7 @@ import java.time.ZonedDateTime;
 
 @Data
 public class ScheduleDTO {
-    private Long scheduleId;
+    private Integer scheduleId;
     private Integer dayNumber;
     private ZonedDateTime startTime;
     private ZonedDateTime endTime;

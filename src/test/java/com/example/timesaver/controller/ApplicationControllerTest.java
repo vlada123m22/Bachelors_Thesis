@@ -37,7 +37,7 @@ public class ApplicationControllerTest {
 
     @Test
     public void testGetFormSuccess() {
-        GetFormResponse resp = new GetFormResponse(Collections.emptyList());
+        GetFormResponse resp = new GetFormResponse(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         when(applicationService.getFormForProject(1L)).thenReturn(resp);
 
         ResponseEntity<?> response = applicationController.getForm(1L);

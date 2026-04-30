@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TeamNrMembers {
     private Team team;
-    private Long nrOfMembers;
+    private Integer nrOfMembers;
 }

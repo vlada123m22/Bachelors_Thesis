@@ -25,7 +25,8 @@ services:
 
   # Spring Boot Backend
   backend:
-    image: vladamusin/backend:0.0.9
+#    image: vladamusin/backend:0.0.7
+    build: .
     container_name: platform_backend
     restart: always
     depends_on:

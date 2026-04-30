@@ -33,7 +33,7 @@ public class ApplicationController {
      * GET /projects/apply/{projectId}
      */
     @GetMapping("/{projectId}")
-    public ResponseEntity<?> getForm(@PathVariable Long projectId) {
+    public ResponseEntity<?> getForm(@PathVariable Integer projectId) {
         try {
             GetFormResponse response = applicationService.getFormForProject(projectId);
             return ResponseEntity.ok(response);

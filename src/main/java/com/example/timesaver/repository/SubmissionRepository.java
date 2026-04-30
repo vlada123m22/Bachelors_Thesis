@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface SubmissionRepository extends JpaRepository<Submission, Long> {
-    Optional<Submission> findByAssignmentIdAndTeamTeamId(Long assignmentId, Long teamId);
+public interface SubmissionRepository extends JpaRepository<Submission, Integer> {
+    Optional<Submission> findByAssignmentIdAndTeamTeamId(Integer assignmentId, Integer teamId);
 
-    List<Submission> findByAssignmentId(Long assignmentId);
+    List<Submission> findByAssignmentId(Integer assignmentId);
 }

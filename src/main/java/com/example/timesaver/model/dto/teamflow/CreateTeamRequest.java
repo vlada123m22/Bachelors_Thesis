@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record CreateTeamRequest(
-        @NotNull Long projectId,
+        @NotNull Integer projectId,
         @NotBlank String ideaTitle,
         String ideaDescription,
         List<RoleReq> roles,

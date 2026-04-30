@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface TeamRoleRequirementRepository extends JpaRepository<TeamRoleRequirement, Long> {
+public interface TeamRoleRequirementRepository extends JpaRepository<TeamRoleRequirement, Integer> {
     List<TeamRoleRequirement> findByTeam(Team team);
 }

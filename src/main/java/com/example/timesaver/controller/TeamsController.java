@@ -17,7 +17,7 @@ public class TeamsController {
 
     @PostMapping ("/{projectId}/create-teams")
     @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
-    public ResponseEntity<Void> createProject(@PathVariable Long projectId) {
+    public ResponseEntity<Void> createProject(@PathVariable Integer projectId) {
         try {
             teamService.createTeams(projectId);
             return ResponseEntity.status(HttpStatus.CREATED).build();

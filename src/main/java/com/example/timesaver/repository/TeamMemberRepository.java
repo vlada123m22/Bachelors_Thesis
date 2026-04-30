@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
-
-public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
+//For backgrounds/roles in each team
+public interface TeamMemberRepository extends JpaRepository<TeamMember, Integer> {
     long countByTeam(Team team);
     Optional<TeamMember> findByTeamAndApplicant(Team team, Applicant applicant);
     List<TeamMember> findByTeam(Team team);

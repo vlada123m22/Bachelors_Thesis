@@ -10,7 +10,7 @@ public class QuestionAnswer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long questionAnswerId;
+    private Integer questionAnswerId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
@@ -20,8 +20,9 @@ public class QuestionAnswer {
     @JoinColumn(name = "applicant_id", nullable = false)
     private Applicant applicant;
 
-    @Column(nullable = false, length = 5000)
+    @Column(nullable = false, length = 1000)
     private String questionAnswer;
+
 
     // Helper method to parse checkbox answers (stored as "option1|option2|option3")
     public String[] getCheckboxAnswers() {

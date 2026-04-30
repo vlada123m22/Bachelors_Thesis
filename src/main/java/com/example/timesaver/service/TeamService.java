@@ -27,7 +27,7 @@ public class TeamService {
 
 
     @Transactional
-    public void createTeams(Long projectId){
+    public void createTeams(Integer projectId){
 
         Optional<Project> projectOpt = projectRepository.findById(projectId);
         if (projectOpt.isEmpty()) {
@@ -95,7 +95,7 @@ public class TeamService {
             a.setTeam(newTeam);
             applicantRepository.save(a);
 
-            TeamNrMembers newIncompleteTeam = new TeamNrMembers(newTeam, 1L);
+            TeamNrMembers newIncompleteTeam = new TeamNrMembers(newTeam, 1);
             incompleteTeamsQueue.offer(newIncompleteTeam);
 
             System.out.println("After new team was created: Team: " + newTeam + "Applicant: " + a);

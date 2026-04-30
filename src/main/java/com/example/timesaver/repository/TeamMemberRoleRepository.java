@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Map;
 
-public interface TeamMemberRoleRepository extends JpaRepository<TeamMemberRole, Long> {
-    void deleteByMemberId(Long memberId);
+public interface TeamMemberRoleRepository extends JpaRepository<TeamMemberRole, Integer> {
+    void deleteByMemberTeamMemberId(Integer memberId);
 
     @Query("select r.roleCode as code, count(r) as cnt from TeamMemberRole r where r.team = ?1 group by r.roleCode")
     List<Map<String, Object>> countByRole(Team team);

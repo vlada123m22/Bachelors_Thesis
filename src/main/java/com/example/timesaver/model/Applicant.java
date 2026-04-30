@@ -2,17 +2,19 @@ package com.example.timesaver.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "applicants")
 @Data
+@NoArgsConstructor
 public class Applicant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long applicantId;
+    private Integer applicantId;
 
     @Column(nullable = false)
     private String firstName;
@@ -52,6 +54,10 @@ public class Applicant {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    public Applicant(Integer applicantId){
+        this.applicantId = applicantId;
+    }
 
     @PrePersist
     protected void onCreate() {
