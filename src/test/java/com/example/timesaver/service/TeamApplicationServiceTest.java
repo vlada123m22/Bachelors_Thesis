@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,38 +38,37 @@ public class TeamApplicationServiceTest {
     @InjectMocks
     private TeamApplicationService teamApplicationService;
 
-//    @Test
-//    public void testCreateTeamSuccess() {
-//        Integer projectId = 1;
-//        Integer leadId = 10;
-//        Project p = new Project();
-//        p.setProjectId(projectId);
-//        p.setMaxNrParticipants(5);
-//        p.setRolesOptions("Dev|Design");
-//        p.setBackgroundOptions("CS|Art");
-//        p.setTeamsPreformed(false);
-//
-//        Applicant lead = new Applicant();
-//        lead.setApplicantId(leadId);
-//        lead.setProject(p);
-//
-//        when(projectRepository.findById(projectId)).thenReturn(Optional.of(p));
-//        when(applicantRepository.findById(leadId)).thenReturn(Optional.of(lead));
-//        when(teamRepository.findAllTeamsByProject(projectId)).thenReturn(Collections.emptyList());
-//        when(teamMemberRepository.findByTeamAndApplicant(any(), eq(lead))).thenReturn(Optional.empty());
-//        when(teamRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//        CreateTeamRequest req = new CreateTeamRequest(projectId, "Title", "Desc",
-//                List.of(new CreateTeamRequest.RoleReq("Dev", 1, 2)),
-//                List.of(new CreateTeamRequest.BackgroundReq("CS", 1, 1)));
-//        Team result = teamApplicationService.createTeam(projectId, leadId, req);
-//
-//        assertNotNull(result);
-//        assertEquals("Title", result.getIdeaTitle());
-//        assertEquals(lead, result.getLead());
-//        verify(roleReqRepo).save(any());
-//        verify(bgReqRepo).save(any());
-//    }
+    @Test
+    public void testCreateTeamSuccess() {
+        Integer projectId = 1;
+        Integer leadId = 10;
+        Project p = new Project();
+        p.setProjectId(projectId);
+        p.setMaxNrParticipants(5);
+        p.setRolesOptions("Dev|Design");
+        p.setBackgroundOptions("CS|Art");
+        p.setTeamsPreformed(false);
+
+        Applicant lead = new Applicant();
+        lead.setApplicantId(leadId);
+        lead.setProject(p);
+
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(p));
+        when(applicantRepository.findById(leadId)).thenReturn(Optional.of(lead));
+        when(teamRepository.findAllTeamsByProject(projectId)).thenReturn(Collections.emptyList());
+        when(teamRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CreateTeamRequest req = new CreateTeamRequest(projectId, "Title", "Desc",
+                List.of(new CreateTeamRequest.RoleReq("Dev", 1, 2)),
+                List.of(new CreateTeamRequest.BackgroundReq("CS", 1, 1)));
+        Team result = teamApplicationService.createTeam(projectId, leadId, req);
+
+        assertNotNull(result);
+        assertEquals("Title", result.getIdeaTitle());
+        assertEquals(lead, result.getLead());
+        verify(roleReqRepo).save(any());
+        verify(bgReqRepo).save(any());
+    }
 
     @Test
     public void testCreateTeamLeadAlreadyInTeam() {
@@ -426,5 +426,104 @@ public class TeamApplicationServiceTest {
         when(teamRepository.findById(1)).thenReturn(Optional.of(team));
 
         assertThrows(RuntimeException.class, () -> teamApplicationService.removeMember(1, 50, 99));
+    }
+
+    @Test
+    public void testApplyToTeamLeadCannotApply() {
+        Integer teamId = 1;
+        Integer leadId = 5;
+        Project p = new Project(); p.setProjectId(100); p.setTeamsPreformed(false);
+        Team team = new Team(); team.setTeamId(teamId); team.setProject(p);
+        Applicant lead = new Applicant(); lead.setApplicantId(leadId);
+        team.setLead(lead);
+
+        Applicant applicant = new Applicant(); applicant.setApplicantId(leadId); applicant.setProject(p);
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
+        when(applicantRepository.findById(leadId)).thenReturn(Optional.of(applicant));
+
+        assertThrows(IllegalStateException.class, () ->
+                teamApplicationService.applyToTeam(teamId, leadId));
+    }
+
+    @Test
+    public void testApplyToTeamAlreadyMemberOfAnotherTeam() {
+        Integer teamId = 1;
+        Integer applicantId = 2;
+        Project p = new Project(); p.setProjectId(100); p.setTeamsPreformed(false);
+        Team team = new Team(); team.setTeamId(teamId); team.setProject(p);
+
+        Applicant applicant = new Applicant(); applicant.setApplicantId(applicantId); applicant.setProject(p);
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
+        when(applicantRepository.findById(applicantId)).thenReturn(Optional.of(applicant));
+        when(teamRepository.findAllTeamsByProject(100)).thenReturn(List.of(team));
+        when(teamMemberRepository.findByTeamAndApplicant(team, applicant)).thenReturn(Optional.of(new TeamMember()));
+
+        assertThrows(IllegalStateException.class, () ->
+                teamApplicationService.applyToTeam(teamId, applicantId));
+    }
+
+    @Test
+    public void testApplyToTeamAlreadyApplied() {
+        Integer teamId = 1;
+        Integer applicantId = 2;
+        Project p = new Project(); p.setProjectId(100); p.setTeamsPreformed(false);
+        Team team = new Team(); team.setTeamId(teamId); team.setProject(p);
+
+        Applicant applicant = new Applicant(); applicant.setApplicantId(applicantId); applicant.setProject(p);
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
+        when(applicantRepository.findById(applicantId)).thenReturn(Optional.of(applicant));
+        when(teamRepository.findAllTeamsByProject(100)).thenReturn(Collections.emptyList());
+        when(teamApplicationRepository.findByTeamAndApplicant(team, applicant))
+                .thenReturn(Optional.of(new TeamApplication()));
+
+        assertThrows(IllegalStateException.class, () ->
+                teamApplicationService.applyToTeam(teamId, applicantId));
+    }
+
+    @Test
+    public void testCreateTeamAlreadyMemberOfTeam() {
+        Integer projectId = 1;
+        Project p = new Project(); p.setProjectId(projectId); p.setTeamsPreformed(false);
+        Applicant lead = new Applicant(); lead.setApplicantId(10); lead.setProject(p);
+
+        Team existing = new Team(); existing.setTeamId(99);
+        // lead is not the lead of existing, but IS a member
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(p));
+        when(applicantRepository.findById(10)).thenReturn(Optional.of(lead));
+        when(teamRepository.findAllTeamsByProject(projectId)).thenReturn(List.of(existing));
+        when(teamMemberRepository.findByTeamAndApplicant(existing, lead)).thenReturn(Optional.of(new TeamMember()));
+
+        assertThrows(IllegalStateException.class, () ->
+                teamApplicationService.createTeam(projectId, 10,
+                        new CreateTeamRequest(projectId, "T", "D", null, null)));
+    }
+
+    @Test
+    public void testDecideApplicationRoleCapacityExceeded() {
+        Integer teamId = 1; Integer leadId = 5;
+        Team team = new Team(); team.setTeamId(teamId);
+        Applicant lead = new Applicant(); lead.setApplicantId(leadId);
+        team.setLead(lead);
+        Project p = new Project(); p.setMaxNrParticipants(5); team.setProject(p);
+
+        TeamApplication app = new TeamApplication();
+        app.setTeam(team); app.setStatus(TeamApplication.Status.PENDING);
+        app.setApplicant(new Applicant());
+
+        when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
+        when(teamApplicationRepository.findById(100)).thenReturn(Optional.of(app));
+        when(teamMemberRepository.countByTeam(team)).thenReturn(1L);
+
+        TeamRoleRequirement trr = new TeamRoleRequirement();
+        trr.setRoleCode("Dev"); trr.setMaxNeeded(1);
+        when(roleReqRepo.findByTeam(team)).thenReturn(List.of(trr));
+        when(memberRoleRepo.countByRole(team)).thenReturn(
+                List.of(Map.of("code", "Dev", "cnt", 1L)));
+        when(memberBgRepo.countByBackground(team)).thenReturn(Collections.emptyList());
+        when(bgReqRepo.findByTeam(team)).thenReturn(Collections.emptyList());
+
+        DecisionRequest req = new DecisionRequest("ACCEPT", List.of("Dev"), null);
+        assertThrows(IllegalStateException.class, () ->
+                teamApplicationService.decideApplication(teamId, 100, leadId, req));
     }
 }

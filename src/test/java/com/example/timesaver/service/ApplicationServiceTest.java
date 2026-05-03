@@ -303,4 +303,123 @@ public class ApplicationServiceTest {
         assertEquals("Success", resp.getStatus());
         verify(applicantRepository).insertApplicant(eq("Jane"), eq("Doe"), eq(1), eq(10), any(), any());
     }
+
+    @Test
+    public void testSubmitApplicationCheckboxQuestion() {
+        mockUser("test");
+        SubmitApplicationRequest req = new SubmitApplicationRequest();
+        req.setProjectId(1);
+        req.setTimezone("UTC");
+        req.setRoles(List.of("Dev"));
+        req.setBackground(List.of("CS"));
+        req.setFirstName("A"); req.setLastName("B");
+        req.setJoinExistentTeam(false);
+
+        QuestionAnswerDTO a = new QuestionAnswerDTO();
+        a.setQuestionNumber(1);
+        a.setQuestionType(QuestionType.CHECKBOX);
+        a.setQuestion("Pick one?");
+        a.setAnswer("Option1");
+        req.setQuestionsAnswers(List.of(a));
+
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(42, null));
+
+        FormQuestion q = new FormQuestion();
+        q.setQuestionNumber(1);
+        q.setQuestionType(QuestionType.CHECKBOX);
+        q.setQuestion("Pick one?");
+        when(questionRepository.findByProjectIdFormSubmission(1)).thenReturn(List.of(q));
+
+        ApplicationResponse resp = applicationService.submitApplication(req, Collections.emptyMap());
+        assertEquals("Success", resp.getStatus());
+        verify(questionAnswerRepository).save(any(QuestionAnswer.class));
+    }
+
+    @Test
+    public void testSubmitApplicationMissingFileThrows() {
+        mockUser("test");
+        SubmitApplicationRequest req = new SubmitApplicationRequest();
+        req.setProjectId(1);
+        req.setTimezone("UTC");
+        req.setRoles(List.of("Dev"));
+        req.setBackground(List.of("CS"));
+        req.setFirstName("A"); req.setLastName("B");
+        req.setJoinExistentTeam(false);
+
+        QuestionAnswerDTO a = new QuestionAnswerDTO();
+        a.setQuestionNumber(1);
+        a.setQuestionType(QuestionType.FILE);
+        a.setQuestion("Upload?");
+        req.setQuestionsAnswers(List.of(a));
+
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(42, null));
+
+        FormQuestion q = new FormQuestion();
+        q.setQuestionNumber(1);
+        q.setQuestionType(QuestionType.FILE);
+        q.setQuestion("Upload?");
+        when(questionRepository.findByProjectIdFormSubmission(1)).thenReturn(List.of(q));
+
+        assertThrows(ApplicationException.class, () ->
+                applicationService.submitApplication(req, Collections.emptyMap()));
+    }
+
+    @Test
+    public void testSubmitApplicationTypeMismatchThrows() {
+        mockUser("test");
+        SubmitApplicationRequest req = new SubmitApplicationRequest();
+        req.setProjectId(1);
+        req.setTimezone("UTC");
+        req.setRoles(List.of("Dev"));
+        req.setBackground(List.of("CS"));
+        req.setFirstName("A"); req.setLastName("B");
+        req.setJoinExistentTeam(false);
+
+        QuestionAnswerDTO a = new QuestionAnswerDTO();
+        a.setQuestionNumber(1);
+        a.setQuestionType(QuestionType.TEXT); // sent as TEXT
+        a.setQuestion("Name?");
+        a.setAnswer("John");
+        req.setQuestionsAnswers(List.of(a));
+
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(42, null));
+
+        FormQuestion q = new FormQuestion();
+        q.setQuestionNumber(1);
+        q.setQuestionType(QuestionType.CHECKBOX); // stored as CHECKBOX — mismatch
+        q.setQuestion("Name?");
+        when(questionRepository.findByProjectIdFormSubmission(1)).thenReturn(List.of(q));
+
+        assertThrows(ApplicationException.class, () ->
+                applicationService.submitApplication(req, Collections.emptyMap()));
+    }
+
+    @Test
+    public void testSubmitApplicationInvalidQuestionNumber() {
+        mockUser("test");
+        SubmitApplicationRequest req = new SubmitApplicationRequest();
+        req.setProjectId(1);
+        req.setTimezone("UTC");
+        req.setRoles(List.of("Dev"));
+        req.setBackground(List.of("CS"));
+        req.setFirstName("A"); req.setLastName("B");
+        req.setJoinExistentTeam(false);
+
+        QuestionAnswerDTO a = new QuestionAnswerDTO();
+        a.setQuestionNumber(99); // doesn't exist
+        a.setQuestionType(QuestionType.TEXT);
+        a.setQuestion("?");
+        req.setQuestionsAnswers(List.of(a));
+
+        when(applicantRepository.saveApplicant(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(makeResult(42, null));
+
+        when(questionRepository.findByProjectIdFormSubmission(1)).thenReturn(Collections.emptyList());
+
+        assertThrows(ApplicationException.class, () ->
+                applicationService.submitApplication(req, Collections.emptyMap()));
+    }
 }

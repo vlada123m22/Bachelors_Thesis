@@ -270,4 +270,21 @@ public class ApplicantSelectionServiceTest {
         assertFalse(a1.getIsSelected());
         verify(applicantRepository).saveAll(any());
     }
+
+    @Test
+    public void testGetCurrentUserNotFoundInRepository() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("ghost");
+        when(userRepository.findByUserName("ghost")).thenReturn(Optional.empty());
+
+        Project project = new Project();
+        project.setProjectId(1);
+        User organizer = new User(); organizer.setId(99);
+        project.setOrganizer(organizer);
+        when(projectRepository.findById(1)).thenReturn(Optional.of(project));
+
+        assertThrows(SecurityException.class, () ->
+                applicantSelectionService.setApplicantSelection(1, 2, true));
+    }
 }

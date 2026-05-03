@@ -1,9 +1,6 @@
 package com.example.timesaver.controller;
 
-import com.example.timesaver.model.dto.auth.LoginRequest;
-import com.example.timesaver.model.dto.auth.LoginResponse;
-import com.example.timesaver.model.dto.auth.SignUpRequest;
-import com.example.timesaver.model.dto.auth.SignUpResponse;
+import com.example.timesaver.model.dto.auth.*;
 import com.example.timesaver.service.AuthenticationService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -12,10 +9,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationControllerTest {
@@ -170,5 +173,66 @@ public class AuthenticationControllerTest {
         ResponseEntity<SignUpResponse> response = authenticationController.signUpParticipant(req);
         // The controller only checks for the specific username conflict message
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
+
+    @Test
+    public void testChangePasswordSuccess() {
+        when(authService.changePassword("user", "old", "new"))
+                .thenReturn(ResponseEntity.ok("Password changed successfully"));
+        ChangePasswordRequest req = new ChangePasswordRequest();
+        req.setOldPassword("old");
+        req.setNewPassword("new");
+        ResponseEntity<String> response = authenticationController.changePassword(req, "user");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    public void testChangePasswordFailure() {
+        when(authService.changePassword("user", "wrong", "new"))
+                .thenReturn(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect old password"));
+        ChangePasswordRequest req = new ChangePasswordRequest();
+        req.setOldPassword("wrong");
+        req.setNewPassword("new");
+        ResponseEntity<String> response = authenticationController.changePassword(req, "user");
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
+
+    @Test
+    public void testDeleteParticipantProfile() {
+        Authentication auth = mock(Authentication.class);
+        doReturn(List.of(new SimpleGrantedAuthority("PARTICIPANT"))).when(auth).getAuthorities();
+        SecurityContext ctx = mock(SecurityContext.class);
+        when(ctx.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(ctx);
+
+        ResponseEntity<String> response = authenticationController.deleteParticipantProfile("user");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(authService).deleteParticipantProfile("user");
+    }
+
+    @Test
+    public void testDeleteOrganizerProfile() {
+        Authentication auth = mock(Authentication.class);
+        doReturn(List.of(new SimpleGrantedAuthority("ORGANIZER"))).when(auth).getAuthorities();
+        SecurityContext ctx = mock(SecurityContext.class);
+        when(ctx.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(ctx);
+
+        ResponseEntity<String> response = authenticationController.deleteParticipantProfile("organizer");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(authService).deleteOrganizerProfile("organizer");
+    }
+
+    @Test
+    public void testDeleteProfileServiceThrows() {
+        Authentication auth = mock(Authentication.class);
+        doReturn(List.of(new SimpleGrantedAuthority("PARTICIPANT"))).when(auth).getAuthorities();
+        SecurityContext ctx = mock(SecurityContext.class);
+        when(ctx.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(ctx);
+
+        doThrow(new RuntimeException("DB error")).when(authService).deleteParticipantProfile("user");
+        ResponseEntity<String> response = authenticationController.deleteParticipantProfile("user");
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }

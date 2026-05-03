@@ -153,4 +153,14 @@ public class ProjectControllerTest {
         ResponseEntity<?> response = projectController.getScheduleForDay(1, 1);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
+
+    @Test
+    public void testGetFutureProjects() {
+        List<ProjectDashboardDTO> projects = Collections.emptyList();
+        when(projectService.getFutureProjects()).thenReturn(projects);
+
+        ResponseEntity<List<ProjectDashboardDTO>> response = projectController.getFutureProjects();
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(projects, response.getBody());
+    }
 }
