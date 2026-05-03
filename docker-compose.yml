@@ -24,29 +24,28 @@ services:
       retries: 5
 
   # Spring Boot Backend
-  backend:
-#    image: vladamusin/backend:0.0.7
-    build: .
-    container_name: platform_backend
-    restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/platformdb
-      SPRING_DATASOURCE_USERNAME: platformuser
-      SPRING_DATASOURCE_PASSWORD: platformpass
-      SERVER_ADDRESS: 0.0.0.0
-      SERVER_PORT: 8081
-      SERVER_FORWARD_HEADERS_STRATEGY: framework
-      JWT_SECRET: 0MhF1xqqaE0VHLUkaEBgUgZtnQWeaNBIAhAgkwvQbFM=
-    # Only expose to internal network, NOT to host
-    expose:
-      - "8081"
-    ports:
-      - "8081:8081"
-    networks:
-      - platform_network
+#  backend:
+#    image: vladamusin/backend:0.0.11
+#    container_name: c__backend
+#    restart: always
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/platformdb
+#      SPRING_DATASOURCE_USERNAME: platformuser
+#      SPRING_DATASOURCE_PASSWORD: platformpass
+#      SERVER_ADDRESS: 0.0.0.0
+#      SERVER_PORT: 8081
+#      SERVER_FORWARD_HEADERS_STRATEGY: framework
+#      JWT_SECRET: 0MhF1xqqaE0VHLUkaEBgUgZtnQWeaNBIAhAgkwvQbFM=
+#    # Only expose to internal network, NOT to host
+#    expose:
+#      - "8081"
+#    ports:
+#      - "8081:8081"
+#    networks:
+#      - platform_network
 #    healthcheck:
 #      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 1"]
 #      interval: 30s

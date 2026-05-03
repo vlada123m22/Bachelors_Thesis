@@ -314,13 +314,13 @@ public class ProjectServiceTest {
         verify(projectRepository).deleteById(projectId);
     }
 
-//    @Test
-//    public void testDeleteProjectNotAuthenticated() {
-//        when(securityContext.getAuthentication()).thenReturn(null);
-//        ProjectResponse resp = projectService.deleteProject(100);
-//        assertEquals("Failure", resp.getStatus());
-//        assertEquals("User not authenticated", resp.getMessage());
-//    }
+    @Test
+    public void testDeleteProjectNotAuthenticated() {
+        when(securityContext.getAuthentication()).thenReturn(null);
+        ProjectResponse resp = projectService.deleteProject(100);
+        assertEquals("Failure", resp.getStatus());
+        assertTrue(resp.getMessage().contains("An error occurred"));
+    }
 
     @Test
     public void testDeleteProjectNotFound() {
@@ -461,5 +461,74 @@ public class ProjectServiceTest {
         List<ScheduleDTO> schedules = projectService.getScheduleByDay(1, 1);
         assertEquals(1, schedules.size());
         assertEquals("Activity", schedules.get(0).getActivityTitle());
+    }
+
+    @Test
+    public void testGetFutureProjects() {
+        ProjectDashboardDTO dto = new ProjectDashboardDTO(1, "Project", null, null, "Desc", 5, 2);
+        when(projectRepository.findFutureProjects()).thenReturn(List.of(dto));
+
+        List<ProjectDashboardDTO> result = projectService.getFutureProjects();
+        assertEquals(1, result.size());
+        assertEquals("Project", result.get(0).getProjectName());
+    }
+
+    @Test
+    public void testCreateProjectWithEmptyFormQuestions() {
+        mockUser("organizer", 1);
+        CreateProjectRequest req = new CreateProjectRequest();
+        req.setProjectName("Test");
+        req.setFormQuestions(Collections.emptyList());
+        req.setSchedules(null);
+        when(projectRepository.save(any())).thenAnswer(i -> {
+            Project p = i.getArgument(0);
+            p.setProjectId(1);
+            return p;
+        });
+        ProjectResponse resp = projectService.createProject(req);
+        assertEquals("Success", resp.getStatus());
+    }
+
+    @Test
+    public void testCanUserViewSchedule_NullUser() {
+        Project project = new Project();
+        project.setScheduleVisibility(ScheduleVisibility.APPLICANTS);
+        User organizer = new User(); organizer.setId(1);
+        project.setOrganizer(organizer);
+        assertFalse(projectService.canUserViewSchedule(project, null));
+    }
+
+    @Test
+    public void testEditProjectWithNullOptions() {
+        mockUser("organizer", 1);
+        EditProjectRequest req = new EditProjectRequest();
+        req.setProjectId(100);
+        req.setProjectName("Updated");
+        req.setRoleOptions(null);
+        req.setBackgroundOptions(null);
+        req.setRolesQuestionText(null);
+        req.setBackgroundQuestionText(null);
+        req.setFormQuestions(Collections.emptyList());
+        req.setSchedules(null);
+
+        User organizer = new User(); organizer.setId(1);
+        Project project = new Project();
+        project.setProjectId(100);
+        project.setOrganizer(organizer);
+
+        when(projectRepository.findById(100)).thenReturn(Optional.of(project));
+        when(projectRepository.save(any())).thenReturn(project);
+        when(scheduleRepository.findByProjectProjectId(100)).thenReturn(Collections.emptyList());
+
+        ResponseEntity<ProjectResponse> resp = projectService.editProject(req);
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+    }
+
+    @Test
+    public void testDeleteProjectStoredProcedureOtherResult() {
+        mockUser("organizer", 1);
+        when(projectRepository.deleteProjectById(100, 1)).thenReturn(Optional.of("Some other message"));
+        ProjectResponse resp = projectService.deleteProject(100);
+        assertEquals("Failure", resp.getStatus());
     }
 }
