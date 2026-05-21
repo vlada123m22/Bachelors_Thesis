@@ -121,8 +121,8 @@ public class AuthenticationServiceTest {
         assertEquals(HttpStatus.OK, resp.getStatusCode());
         assertEquals("Success", resp.getBody().getState());
         assertEquals("token", resp.getBody().getToken());
+        assertEquals(Set.of(Role.PARTICIPANT), resp.getBody().getRoles());
     }
-
     @Test
     public void testLoginUserNotFound() {
         LoginRequest req = new LoginRequest();

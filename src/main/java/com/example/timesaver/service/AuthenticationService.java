@@ -113,7 +113,7 @@ public class AuthenticationService {
         // Generate JWT token
         String token = jwtService.generateToken(user.getUserName(), user.getRoles());
 
-        body = new LoginResponse("Success", null, token);
+        body = new LoginResponse("Success", null, token, user.getRoles());
         return ResponseEntity.status(HttpStatus.OK).body(body);
     }
 
