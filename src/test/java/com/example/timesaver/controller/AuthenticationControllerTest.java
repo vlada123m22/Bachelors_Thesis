@@ -1,5 +1,6 @@
 package com.example.timesaver.controller;
 
+import com.example.timesaver.model.Role;
 import com.example.timesaver.model.dto.auth.*;
 import com.example.timesaver.service.AuthenticationService;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -98,7 +100,7 @@ public class AuthenticationControllerTest {
     @Test
     public void testLogin() {
         LoginRequest req = new LoginRequest();
-        LoginResponse resp = new LoginResponse("Success", null, "token");
+        LoginResponse resp = new LoginResponse("Success", null, "token", Set.of(Role.PARTICIPANT));
         when(authService.login(any())).thenReturn(ResponseEntity.ok(resp));
 
         ResponseEntity<LoginResponse> response = authenticationController.login(req);

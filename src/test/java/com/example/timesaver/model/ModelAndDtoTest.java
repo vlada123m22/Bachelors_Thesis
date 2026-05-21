@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -280,8 +281,9 @@ public class ModelAndDtoTest {
         lr.setPassword("P");
         assertEquals("U", lr.getUserName());
 
-        LoginResponse lres = new LoginResponse("S", "E", "T");
+        LoginResponse lres = new LoginResponse("S", "E", "T", Set.of(Role.PARTICIPANT));
         assertEquals("T", lres.getToken());
+        assertEquals(Set.of(Role.PARTICIPANT), lres.getRoles());
 
         SignUpRequest sur = new SignUpRequest();
         sur.setUserName("U");
