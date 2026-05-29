@@ -60,7 +60,7 @@ public class ProjectService {
             }
 
             // Validate question numbers are unique and sequential
-            if (!validateQuestionNumbers(request.getFormQuestions())) {
+            if (invalidQuestionNumbers(request.getFormQuestions())) {
                 return new ProjectResponse("Failure", "Question numbers must be unique and start from 1");
             }
 
@@ -174,7 +174,7 @@ public class ProjectService {
             }
 
             // Validate question numbers
-            if (!validateQuestionNumbers(request.getFormQuestions())) {
+            if (invalidQuestionNumbers(request.getFormQuestions())) {
 
                 responseBody = new ProjectResponse("Failure", "Question numbers must be unique and start from 1");
                 return ResponseEntity.badRequest().body(responseBody);
@@ -271,9 +271,9 @@ public class ProjectService {
         return userRepository.findByUserName(username).orElse(null);
     }
 
-    private boolean validateQuestionNumbers(List<FormQuestionDTO> questions) {
+    private boolean invalidQuestionNumbers(List<FormQuestionDTO> questions) {
         if (questions == null || questions.isEmpty()) {
-            return true;
+            return false;
         }
 
         // Check for unique question numbers
@@ -283,7 +283,7 @@ public class ProjectService {
                 .count();
 
         if (distinctCount != questions.size()) {
-            return false; // Duplicate question numbers
+            return true; // Duplicate question numbers
         }
 
         // Check if question numbers start from 1 and are sequential
@@ -294,11 +294,11 @@ public class ProjectService {
 
         for (int i = 0; i < sortedNumbers.size(); i++) {
             if (sortedNumbers.get(i) != i + 1) {
-                return false; // Not sequential starting from 1
+                return true; // Not sequential starting from 1
             }
         }
 
-        return true;
+        return false;
     }
 
     private void saveQuestions(List<FormQuestionDTO> dtos, Project project) {

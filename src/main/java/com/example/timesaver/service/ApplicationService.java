@@ -95,7 +95,9 @@ public class ApplicationService {
     public ApplicationResponse submitApplication(
             SubmitApplicationRequest request,
             Map<Integer, MultipartFile> fileAnswers) {
-            Integer userId = Math.toIntExact(getCurrentUser().getId());
+
+
+            Integer userId = Objects.nonNull(getCurrentUser()) ? Math.toIntExact(getCurrentUser().getId()) : null;
 
             ZoneId timezone = ZoneId.of(request.getTimezone());
             String roles = PipeList.join(request.getRoles());
