@@ -110,7 +110,7 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Integer> {
             "FROM Applicant a WHERE a.project.projectId = :projectId AND LOWER(a.team.teamName) = LOWER(:teamName)")
     List<TeammateDTO> getFirstAndLastNameByTeamName(@Param("projectId") Integer projectId, @Param("teamName") String teamName);
 
-    @Query("SELECT new com.example.timesaver.model.dto.application.ApplicantNameDTO(a.firstName, a.lastName) " +
+    @Query("SELECT new com.example.timesaver.model.dto.applicants.display.ApplicantNameDTO(a.firstName, a.lastName) " +
             "FROM Applicant a WHERE a.project.projectId = :projectId")
     List<ApplicantNameDTO> getApplicantNamesByProject(@Param("projectId") Integer projectId);
 }
