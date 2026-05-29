@@ -657,7 +657,7 @@ Get all teams and their members (first and last name) for a project.
 ### GET `/{projectId}/teams/{teamName}/members`
 Get the first and last names of all members belonging to a specific team within a project.
 
-**Access:** Authenticated  
+**Access:** Public  
 **Path Parameters:**
 - `projectId` — integer project ID
 - `teamName` — the team name (case-insensitive)

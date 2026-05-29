@@ -4,7 +4,10 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <changeSet id="add-mock-data" author="junie">
-        <sqlFile path="db/changelog/changes/data/mock_data.sql" relativeToChangelogFile="false"/>
+        <sqlFile path="db/changelog/changes/data/mock_data.sql" 
+                 relativeToChangelogFile="false" 
+                 splitStatements="false" 
+                 stripComments="false"/>
     </changeSet>
 
 </databaseChangeLog>

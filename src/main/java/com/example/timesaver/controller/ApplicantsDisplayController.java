@@ -98,7 +98,13 @@ public class ApplicantsDisplayController {
     }
 
     @GetMapping("/teams/{teamName}/members")
-    public ResponseEntity<List<TeammateDTO>> getTeamMembers(@PathVariable Integer projectId, @PathVariable String teamName) {
-        return ResponseEntity.ok(applicantsDisplayService.getTeamMembersByName(projectId, teamName));
+    public ResponseEntity<List<TeammateDTO>> getTeamMembers(
+            @PathVariable Integer projectId,
+            @PathVariable String teamName) {
+        try {
+            return ResponseEntity.ok(applicantsDisplayService.getTeamMembersByName(projectId, teamName));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
