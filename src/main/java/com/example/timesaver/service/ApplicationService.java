@@ -66,6 +66,7 @@ public class ApplicationService {
 
         response.setBackgroundOptions(allowedBkg);
         response.setRoleOptions(allowedRoles);
+        response.setTeamsPreformed(projectBackgroundsRoles.getTeamsPreformed());
 /* 1. Lookup project for bckd and roles, by projectId - done
 2. Lookup questions by projectID (questionNumber, QuestionType, question, checkboxOptions)
 * */

@@ -71,4 +71,8 @@ public class ApplicantsDisplayService {
         return new GetParticipantsDTO(questionDTOs, participantsWithTeamDTOs, participantsWithNoTeamDTOs);
 
     }
+
+    public List<TeammateDTO> getTeamMembersByName(Integer projectId, String teamName) {
+        return applicantRepository.getFirstAndLastNameByTeamName(projectId, teamName);
+    }
 }

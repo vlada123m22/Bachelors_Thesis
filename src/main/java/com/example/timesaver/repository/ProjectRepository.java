@@ -33,7 +33,7 @@ public interface ProjectRepository extends JpaRepository<Project, Integer> {
             "ORDER BY p.startDate ASC")
     List<ProjectDashboardDTO> findFutureProjects();
 
-    @Query("SELECT new com.example.timesaver.model.Project(p.backgroundOptions, p.rolesOptions) " +
+    @Query("SELECT new com.example.timesaver.model.Project(p.backgroundOptions, p.rolesOptions, p.teamsPreformed) " +
             " FROM Project p " +
             "WHERE p.projectId = :projectId")
     Optional<Project> getBackgroundsRolesByProjectId(@Param("projectId") Integer projectId);

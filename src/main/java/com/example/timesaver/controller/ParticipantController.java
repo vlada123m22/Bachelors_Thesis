@@ -1,7 +1,9 @@
 package com.example.timesaver.controller;
 
 import com.example.timesaver.model.User;
+import com.example.timesaver.model.dto.applicants.display.ApplicantNameDTO;
 import com.example.timesaver.model.dto.participant.ParticipantProjectStatusDTO;
+import com.example.timesaver.repository.ApplicantRepository;
 import com.example.timesaver.service.ParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,8 @@ public class ParticipantController {
     @Autowired
     private ParticipantService participantService;
 
+    @Autowired
+    private ApplicantRepository applicantRepository;
     /**
      * Get all projects the participant has applied for, along with acceptance status
      * GET /participant/my-applications
@@ -48,5 +52,11 @@ public class ParticipantController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error fetching team applications: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/projects/{projectId}/applicants")
+    @PreAuthorize("hasAnyRole('PARTICIPANT', 'ADMIN')")
+    public ResponseEntity<List<ApplicantNameDTO>> getProjectApplicants(@PathVariable Integer projectId) {
+        return ResponseEntity.ok(applicantRepository.getApplicantNamesByProject(projectId));
     }
 }
