@@ -5,11 +5,14 @@ import com.example.timesaver.model.dto.applicants.display.GetTeamsDTO;
 import com.example.timesaver.model.dto.applicants.selection.BulkUpdateSelectionRequest;
 import com.example.timesaver.model.dto.applicants.selection.UpdateSelectionRequest;
 import com.example.timesaver.model.dto.applicants.selection.UpdateSelectionResponse;
+import com.example.timesaver.model.dto.application.TeammateDTO;
 import com.example.timesaver.service.ApplicantSelectionService;
 import com.example.timesaver.service.ApplicantsDisplayService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/{projectId}")
@@ -92,5 +95,10 @@ public class ApplicantsDisplayController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new UpdateSelectionResponse("ERROR", "Unexpected error"));
         }
+    }
+
+    @GetMapping("/teams/{teamName}/members")
+    public ResponseEntity<List<TeammateDTO>> getTeamMembers(@PathVariable Integer projectId, @PathVariable String teamName) {
+        return ResponseEntity.ok(applicantsDisplayService.getTeamMembersByName(projectId, teamName));
     }
 }

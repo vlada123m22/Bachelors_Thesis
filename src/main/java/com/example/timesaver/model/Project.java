@@ -70,9 +70,10 @@ public class Project {
     private String backgroundQuestionText = "What is your background?";
 
 
-    public Project(String backgroundOptions, String rolesOptions) {
+    public Project(String backgroundOptions, String rolesOptions, Boolean teamsPreformed) {
         this.backgroundOptions = backgroundOptions;
         this.rolesOptions = rolesOptions;
+        this.teamsPreformed = teamsPreformed;
     }
 
     @PrePersist

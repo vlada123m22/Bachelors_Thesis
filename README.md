@@ -258,7 +258,7 @@ Create a new project.
 > **Notes:**
 > - `questionNumber` values must be unique, start from 1, and be sequential.
 > - `checkboxOptions` is a pipe (`|`) separated string. Required only when `questionType` is `CHECKBOX`.
-> - `teamsPreformed: true` means teams are assigned by the organizer algorithm; `false` means participants form their own teams.
+> - `teamsPreformed: true` applicants register in teams, like at a hackathon (team-based); `false` means participants are registering individually and forming the teams at the event (idea-based)
 
 **Responses:**
 
@@ -485,7 +485,7 @@ Get all upcoming projects (start date in the future), ordered by start date asce
 ## Applications — `/projects/apply`
 
 ### GET `/projects/apply/{projectId}`
-Get the application form for a project, including form questions, role options, and background options.
+Get the application form for a project, including form questions, role options, background options, and whether teams are pre-formed.
 
 **Access:** Public  
 **Path Parameter:** `projectId` — integer project ID
@@ -521,9 +521,13 @@ Get the application form for a project, including form questions, role options, 
     }
   ],
   "roleOptions": ["Developer", "Designer"],
-  "backgroundOptions": ["Computer Science", "Marketing"]
+  "backgroundOptions": ["Computer Science", "Marketing"],
+  "teamsPreformed": true
 }
 ```
+
+> `teamsPreformed: `true` applicants  register in teams, like at a hackathon (team-based); `false` means participants are registering individually and forming the teams at the event (idea-based)
+
 
 ---
 
@@ -646,6 +650,31 @@ Get all teams and their members (first and last name) for a project.
     { "firstName": "Jane", "lastName": "Smith" }
   ]
 }
+```
+
+---
+
+### GET `/{projectId}/teams/{teamName}/members`
+Get the first and last names of all members belonging to a specific team within a project.
+
+**Access:** Authenticated  
+**Path Parameters:**
+- `projectId` — integer project ID
+- `teamName` — the team name (case-insensitive)
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| 200 | Members retrieved |
+| 500 | Unexpected error |
+
+**200 Response Body:**
+```json
+[
+  { "firstName": "John", "lastName": "Doe" },
+  { "firstName": "Jane", "lastName": "Smith" }
+]
 ```
 
 ---
@@ -828,9 +857,32 @@ Get all team applications submitted by a participant for a specific project. Onl
 
 ---
 
+### GET `/participant/projects/{projectId}/applicants`
+Get the first and last names of all applicants for a given project. Intended for participants to see who else has applied.
+
+**Access:** `PARTICIPANT`  
+**Path Parameter:** `projectId` — integer project ID
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| 200 | Applicant names retrieved |
+| 500 | Unexpected error |
+
+**200 Response Body:**
+```json
+[
+  { "firstName": "John", "lastName": "Doe" },
+  { "firstName": "Jane", "lastName": "Smith" }
+]
+```
+
+---
+
 ## Teams Flow — `/api/teams-flow`
 
-These endpoints support participant-driven team formation (when `teamsPreformed = false`). All endpoints resolve the acting user from the JWT token and look up their applicant record for the given project.
+These endpoints support idea-driven team formation (when `teamsPreformed = false`). All endpoints resolve the acting user from the JWT token and look up their applicant record for the given project.
 
 ### POST `/api/teams-flow/projects/{projectId}/teams`
 Create a new team within a project. The authenticated user becomes the team lead.

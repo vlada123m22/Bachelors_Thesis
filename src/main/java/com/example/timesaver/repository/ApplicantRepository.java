@@ -1,6 +1,7 @@
 package com.example.timesaver.repository;
 
 import com.example.timesaver.model.*;
+import com.example.timesaver.model.dto.applicants.display.ApplicantNameDTO;
 import com.example.timesaver.model.dto.applicants.display.GetParticipantsHelperDTO;
 import com.example.timesaver.model.dto.application.ApplicantTeam;
 import com.example.timesaver.model.dto.application.TeammateDTO;
@@ -104,4 +105,12 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Integer> {
             @Param("in_roles") String roles,
             @Param("in_background") String background
     );
+
+    @Query("SELECT new com.example.timesaver.model.dto.application.TeammateDTO(a.firstName, a.lastName) " +
+            "FROM Applicant a WHERE a.project.projectId = :projectId AND LOWER(a.team.teamName) = LOWER(:teamName)")
+    List<TeammateDTO> getFirstAndLastNameByTeamName(@Param("projectId") Integer projectId, @Param("teamName") String teamName);
+
+    @Query("SELECT new com.example.timesaver.model.dto.application.ApplicantNameDTO(a.firstName, a.lastName) " +
+            "FROM Applicant a WHERE a.project.projectId = :projectId")
+    List<ApplicantNameDTO> getApplicantNamesByProject(@Param("projectId") Integer projectId);
 }
