@@ -21,10 +21,10 @@ public class GetFormResponse {
     private Boolean teamsPreformed;
 
 
-    public GetFormResponse(List<FormQuestionDTO> formQuestions, List<String> roleOptions, List<String> backgroundOptions) {
-        this.formQuestions = formQuestions;
-        this.roleOptions = roleOptions;
-        this.backgroundOptions = backgroundOptions;
-    }
+//    public GetFormResponse(List<FormQuestionDTO> formQuestions, List<String> roleOptions, List<String> backgroundOptions) {
+//        this.formQuestions = formQuestions;
+//        this.roleOptions = roleOptions;
+//        this.backgroundOptions = backgroundOptions;
+//    }
 
 }

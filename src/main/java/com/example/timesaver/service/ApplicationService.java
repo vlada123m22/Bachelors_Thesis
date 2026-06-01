@@ -85,7 +85,7 @@ public class ApplicationService {
                 })
                 .collect(Collectors.toList());
 
-        return new GetFormResponse(questionDTOs, allowedRoles, allowedBkg);
+        return new GetFormResponse(questionDTOs, allowedRoles, allowedBkg, projectBackgroundsRoles.getTeamsPreformed());
     }
 
     /**
