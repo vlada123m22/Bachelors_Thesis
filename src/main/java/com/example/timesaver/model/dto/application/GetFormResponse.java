@@ -12,19 +12,19 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class GetFormResponse {
     private  List<FormQuestionDTO> formQuestions;
     private  List<String> roleOptions;
     private  List<String> backgroundOptions;
     private Boolean teamsPreformed;
 
-
-//    public GetFormResponse(List<FormQuestionDTO> formQuestions, List<String> roleOptions, List<String> backgroundOptions) {
-//        this.formQuestions = formQuestions;
-//        this.roleOptions = roleOptions;
-//        this.backgroundOptions = backgroundOptions;
-//    }
+     public GetFormResponse() {}
+    public GetFormResponse(List<FormQuestionDTO> formQuestions, List<String> roleOptions, List<String> backgroundOptions) {
+        this.formQuestions = formQuestions;
+        this.roleOptions = roleOptions;
+        this.backgroundOptions = backgroundOptions;
+        this.teamsPreformed = teamsPreformed;
+    }
 
     public GetFormResponse(List<FormQuestionDTO> formQuestions, List<String> roleOptions, List<String> backgroundOptions, Boolean teamsPreformed) {
         this.formQuestions = formQuestions;
