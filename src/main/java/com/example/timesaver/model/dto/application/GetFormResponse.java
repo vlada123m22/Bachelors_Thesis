@@ -13,7 +13,6 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class GetFormResponse {
     private  List<FormQuestionDTO> formQuestions;
     private  List<String> roleOptions;
@@ -26,5 +25,12 @@ public class GetFormResponse {
 //        this.roleOptions = roleOptions;
 //        this.backgroundOptions = backgroundOptions;
 //    }
+
+    public GetFormResponse(List<FormQuestionDTO> formQuestions, List<String> roleOptions, List<String> backgroundOptions, Boolean teamsPreformed) {
+        this.formQuestions = formQuestions;
+        this.roleOptions = roleOptions;
+        this.backgroundOptions = backgroundOptions;
+        this.teamsPreformed = teamsPreformed;
+    }
 
 }
